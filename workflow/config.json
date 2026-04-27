@@ -64,6 +64,11 @@
       }
     }
   },
+  "architecture": {
+    "local_device": "Mac Mini M4 (text input only, no production)",
+    "production": "cloud-only",
+    "description": "All AI production (image/video/audio) runs on cloud services. User inputs ideas via text, Hermes orchestrates cloud tools."
+  },
   "platforms": {
     "available": [
       "douyin",
