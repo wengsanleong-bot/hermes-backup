@@ -1,0 +1,79 @@
+{
+  "llm": {
+    "current": "minimax",
+    "available": [
+      "minimax",
+      "grok",
+      "claude"
+    ],
+    "models": {
+      "minimax": {
+        "name": "MiniMax-M2",
+        "api_key": ""
+      },
+      "grok": {
+        "name": "Grok-4",
+        "api_key": ""
+      },
+      "claude": {
+        "name": "Claude 3.5",
+        "api_key": ""
+      }
+    }
+  },
+  "video": {
+    "current": "runway",
+    "available": [
+      "runway",
+      "supergrok",
+      "kling",
+      "pika"
+    ],
+    "configs": {
+      "runway": {
+        "api_key": ""
+      },
+      "supergrok": {
+        "api_key": ""
+      },
+      "kling": {
+        "api_key": ""
+      },
+      "pika": {
+        "api_key": ""
+      }
+    }
+  },
+  "audio": {
+    "current": "elevenlabs",
+    "available": [
+      "elevenlabs",
+      "cartesia",
+      "openai"
+    ],
+    "configs": {
+      "elevenlabs": {
+        "api_key": "",
+        "voice_id": ""
+      },
+      "cartesia": {
+        "api_key": ""
+      },
+      "openai": {
+        "api_key": ""
+      }
+    }
+  },
+  "platforms": {
+    "available": [
+      "douyin",
+      "kuaishou",
+      "xiaohongshu",
+      "shipinhao",
+      "bilibili"
+    ],
+    "selected": [
+      "douyin"
+    ]
+  }
+}
