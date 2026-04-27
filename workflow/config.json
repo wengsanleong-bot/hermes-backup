@@ -78,17 +78,15 @@
   },
   "audio": {
     "current": "elevenlabs",
+    "cloud": [
+      "elevenlabs"
+    ],
+    "local": [
+      "xtts"
+    ],
     "available": [
       "elevenlabs",
-      "cartesia",
-      "openai_tts",
-      "playht",
-      "lovo",
-      "voicecraft",
-      "xtts",
-      "bark",
-      "azure_tts",
-      "polly"
+      "xtts"
     ],
     "configs": {
       "elevenlabs": {
