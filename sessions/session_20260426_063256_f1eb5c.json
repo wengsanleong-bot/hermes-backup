@@ -1,0 +1,30 @@
+{
+  "session_id": "20260426_063256_f1eb5c",
+  "model": "MiniMax-M2.7",
+  "base_url": "https://api.minimaxi.com/anthropic",
+  "platform": "feishu",
+  "session_start": "2026-04-26T06:32:56.676704",
+  "last_updated": "2026-04-26T06:33:03.622416",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nConversation started: Sunday, April 26, 2026 06:32 AM\nModel: MiniMax-M2.7\nProvider: minimax-cn\n\nYou are in a Feishu (Lark) workspace communicating with your user. Feishu renders Markdown in messages — bold, italic, code blocks, and links are supported. You can send media files natively: include MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, .webp) are uploaded and displayed inline, audio files as voice messages, and other files as attachments.",
+  "tools": [],
+  "message_count": 2,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Search for 小红书 财经内容 合规 规则 2024 2025 禁止 金融 管理规范"
+    },
+    {
+      "role": "assistant",
+      "content": "[TOOL_CALL]\n{tool => \"WebFetch\", args => {\n  --url \"https://www.xiaohongshu.com/explore\"\n  --prompt \"Find official Xiaohongshu (小红书) financial content compliance rules, guidelines, and prohibited content for 2024-2025\"\n  --type \"search\"\n}}\n[/TOOL_CALL]\n[TOOL_CALL]\n{tool => \"WebFetch\", args => {\n  --url \"https://www.xiaohongshu.com/rule/labor\"\n  --prompt \"小红书财经内容合规规则 2024 2025 禁止内容 金融管理规范\"\n  --type \"search\"\n}}\n[/TOOL_CALL]",
+      "reasoning": "The user wants me to search for information about 小红书 (Xiaohongshu/Lark) financial content compliance rules, specifically around 2024-2025 regulations, prohibitions, and financial management standards.\n\nLet me start by searching the web for this information.",
+      "finish_reason": "stop",
+      "reasoning_details": [
+        {
+          "signature": "bd9fcbcf2d55b2eaec1990566adc65d2e5804817f2d3d8d506b0287f81ee1002",
+          "thinking": "The user wants me to search for information about 小红书 (Xiaohongshu/Lark) financial content compliance rules, specifically around 2024-2025 regulations, prohibitions, and financial management standards.\n\nLet me start by searching the web for this information.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}

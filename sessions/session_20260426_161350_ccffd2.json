@@ -1,0 +1,1700 @@
+{
+  "session_id": "20260426_161350_ccffd2",
+  "model": "MiniMax-M2.7",
+  "base_url": "https://api.minimaxi.com/v1/",
+  "platform": "feishu",
+  "session_start": "2026-04-26T16:13:50.394943",
+  "last_updated": "2026-04-26T16:14:06.556022",
+  "system_prompt": "# Hermes Agent Persona\n\n<!--\nThis file defines the agent's personality and tone.\nThe agent will embody whatever you write here.\nEdit this to customize how Hermes communicates with you.\n\nExamples:\n  - \"You are a warm, playful assistant who uses kaomoji occasionally.\"\n  - \"You are a concise technical expert. No fluff, just facts.\"\n  - \"You speak like a friendly coworker who happens to know everything.\"\n\nThis file is loaded fresh each message -- no restart needed.\nDelete the contents (or this file) to use the default personality.\n-->\n\nYou have persistent memory across sessions. Save durable facts using the memory tool: user preferences, environment details, tool quirks, and stable conventions. Memory is injected into every turn, so keep it compact and focused on facts that will still matter later.\nPrioritize what reduces future user steering — the most valuable memory is one that prevents the user from having to correct or remind you again. User preferences and recurring corrections matter more than procedural task details.\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts. If you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\nWrite memories as declarative facts, not instructions to yourself. 'User prefers concise responses' ✓ — 'Always respond concisely' ✗. 'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. Imperative phrasing gets re-read as a directive in later sessions and can cause repeated work or override the user's current request. Procedures and workflows belong in skills, not memory. When the user references something from a past conversation or you suspect relevant cross-session context exists, use session_search to recall it before asking them to repeat themselves. After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial workflow, save the approach as a skill with skill_manage so you can reuse it next time.\nWhen using a skill and finding it outdated, incomplete, or wrong, patch it immediately with skill_manage(action='patch') — don't wait to be asked. Skills that aren't maintained become liabilities.\n\n══════════════════════════════════════════════\nMEMORY (your personal notes) [77% — 1,702/2,200 chars]\n══════════════════════════════════════════════\n【工具栈 · 2026-04-26】\nMiniMax API(key in conversation)。SuperGrok $30/月 = Grok 4文字+grok-imagine-video($0.50-0.70/秒)。Runway $15/月。ElevenLabs $5/月。\n本地部署：Mac Mini M4 16GB已安装ComfyUI+Stable Diffusion（SDXL~6GB/SD1.5~4GB）；Windows AMD 6700 XT对主流AI框架支持差。\n工具角色分工：ComfyUI=图像生成（文字→图片）；Runway/SuperGrok=视频生成（图片→视频 或 文字→视频）；Stable Diffusion=ComfyUI的底层模型。\n工具抽象层：LLM/视频/语音可切换不硬编码。\n\n【TradingAgents bug · 重要】\nresult['market_report']等content是LLM推理提示词(<think>)非实际报告。正确结果只有top-level decision+individual report(需clean_think)。past_context被前次污染，final_trade_decision含他股票反射记录不可靠。news_report偶有\"HOLD/SELL\"应取最谨慎。deep_think可用grok-4-0709。\n\n【合规系统 · 2026-04-26】\nskill: social-media/multi-platform-compliance/SKILL.md\n抖音✅ / 快手✅ / 视频号✅ / B站⚠️ / 小红书❌(IP风控)\n快手2.2.2(m)个股推荐=直接严重违规；视频号4.6.2荐股+引流禁止\n\n【browser-agent】已测试通过 ~.hermes/skills/browser-automation/browser-agent/\n\n【AI行为日志】ai-action-log skill已建立 | 日志文件：~/.hermes/logs/ai_actions.log | 分类：系统/记忆/工具/研究/决策/用户/错误 | 触发：MEMORY>80%必须上报，不私下处理\n\n【创意流水线 · creative-workflow-dashboard skill】\n路径：~/.hermes/skills/creative/creative-workflow-dashboard/\n7模块：A选题→B文案→C合规→D视频→E语音→F组装→G发布\nserver.py(Flask:8765)+tui.py(curses)双界面\nstate: workflow_state.json + module_outputs/*.json\n工具配置API支持运行时切换\n备份策略：等框架完整测试后再注册GitHub\n\n【工作模式 · Creative Director】\n不做执行只做决策；每步多个选项不搞二选一；修改可行性内置（任意模块退回重跑）；模块化工厂流水线；不临时设计希望流程提前固化\n\n【ComfyUI架构要点 · 2026-04-26研究】\n源码：https://github.com/comfyanonymous/ComfyUI\n核心架构：有向无环图(DAG)执行引擎，节点间通过[node_id, output_index]引用（is_link）\npoll_op模式：异步任务轮询机制（estimated_duration进度显示/failed/completed状态/可取消）\nGraphBuilder：编程式构建工作流，动态子图注入\n三层缓存：输入签名缓存→LRU RAM缓存→RAM压力缓存（避免重复调用API省钱）\n工具抽象：ApiEndpoint统一封装（sync_op+异步轮询+poll_op），对Runway/MiniMax等API均适用\n对我们的启发：poll_op可融入模块D/E做视频/语音任务的进度+可取消；缓存设计可融入模块B/D/E避免重复调用API\n\n══════════════════════════════════════════════\nUSER PROFILE (who the user is) [32% — 447/1,375 chars]\n══════════════════════════════════════════════\n用户：财经本科在读 + 香港上市公司基层 + 散户投资者\n目标：抖音财经知识AI视频流量变现；第一个月实验月跑通流程\n内容：不帅气+说话不厉害 → 纯AI动画/数据可视化+克隆配音，不出镜\n声音：希望用自己声音（ElevenLabs克隆）\n预算：$20/月（ElevenLabs $5 + Runway $15）\n设备：Mac Mini M4（主设备）+ 高配Windows PC（AMD 6700 XT）+ 手机\nMac Mini M4 已安装 ComfyUI + Stable Diffusion（本地免费画图）\n工作流定位：ComfyUI（本地画图）+ Runway/SuperGrok（云端视频）+ ElevenLabs（克隆声音）\n\n思维严谨，决策前深入分析原理，不急于接受表面答案。\nCreative Director模式：只做决策不执行；每步给多个选项；不临时设计流程提前固化。\n理解GitHub是备份工具，已注册GitHub。\n\n用户定位：实战派散户分享者，财经知识AI视频方向\n\n## Skills (mandatory)\nBefore replying, scan the skills below. If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of loading — it is always better to have context you don't need than to miss critical steps, pitfalls, or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific commands, and proven workflows that outperform general-purpose approaches. Load the skill even if you think you could handle the task with basic tools like web_search or terminal. Skills also encode the user's preferred approach, conventions, and quality standards for tasks like code review, planning, and testing — load them even for tasks you already know how to do, because the skill defines how it should be done here.\nIf a skill has issues, fix it with skill_manage(action='patch').\nAfter difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, had wrong commands, or needed pitfalls you discovered, update it before finishing.\n\n<available_skills>\n  autonomous-ai-agents: Skills for spawning and orchestrating autonomous AI coding agents and multi-agent workflows — running independent agent processes, delegating tasks, and coordinating parallel workstreams.\n    - claude-code: Delegate coding tasks to Claude Code (Anthropic's CLI age...\n    - codex: Delegate coding tasks to OpenAI Codex CLI agent. Use for ...\n    - hermes-agent: Complete guide to using and extending Hermes Agent — CLI ...\n    - opencode: Delegate coding tasks to OpenCode CLI agent for feature i...\n  browser-automation:\n    - browser-agent: Linux无图形界面下的浏览器自动化框架 — 支持动态网页抓取、反爬应对、内容提取、任务队列\n  creative: Creative content generation — ASCII art, hand-drawn style diagrams, and visual design tools.\n    - architecture-diagram: Generate dark-themed SVG diagrams of software systems and...\n    - ascii-art: Generate ASCII art using pyfiglet (571 fonts), cowsay, bo...\n    - ascii-video: Production pipeline for ASCII art video — any format. Con...\n    - baoyu-comic: Knowledge comic creator supporting multiple art styles an...\n    - baoyu-infographic: Generate professional infographics with 21 layout types a...\n    - creative-workflow-dashboard: 创作流水线可视化控制面板 - 模块化AI视频创作工作流系统\n    - design-md: Author, validate, diff, and export DESIGN.md files — Goog...\n    - excalidraw: Create hand-drawn style diagrams using Excalidraw JSON fo...\n    - ideation: Generate project ideas through creative constraints. Use ...\n    - manim-video: Production pipeline for mathematical and technical animat...\n    - p5js: Production pipeline for interactive and generative visual...\n    - pixel-art: Convert images into retro pixel art with hardware-accurat...\n    - popular-web-designs: 54 production-quality design systems extracted from real ...\n    - songwriting-and-ai-music: Songwriting craft, AI music generation prompts (Suno focu...\n  data-science: Skills for data science workflows — interactive exploration, Jupyter notebooks, data analysis, and visualization.\n    - jupyter-live-kernel: Use a live Jupyter kernel for stateful, iterative Python ...\n    - tradingagents: Multi-agent LLM financial trading framework with LangGrap...\n  devops:\n    - webhook-subscriptions: Create and manage webhook subscriptions for event-driven ...\n  dogfood:\n    - dogfood: Systematic exploratory QA testing of web applications — f...\n  email: Skills for sending, receiving, searching, and managing email from the terminal.\n    - himalaya: CLI to manage emails via IMAP/SMTP. Use himalaya to list,...\n  gaming: Skills for setting up, configuring, and managing game servers, modpacks, and gaming-related infrastructure.\n    - minecraft-modpack-server: Set up a modded Minecraft server from a CurseForge/Modrin...\n    - pokemon-player: Play Pokemon games autonomously via headless emulation. S...\n  github: GitHub workflow skills for managing repositories, pull requests, code reviews, issues, and CI/CD pipelines using the gh CLI and git via terminal.\n    - codebase-inspection: Inspect and analyze codebases using pygount for LOC count...\n    - github-auth: Set up GitHub authentication for the agent using git (uni...\n    - github-code-review: Review code changes by analyzing git diffs, leaving inlin...\n    - github-issues: Create, manage, triage, and close GitHub issues. Search e...\n    - github-pr-workflow: Full pull request lifecycle — create branches, commit cha...\n    - github-repo-management: Clone, create, fork, configure, and manage GitHub reposit...\n  mcp: Skills for working with MCP (Model Context Protocol) servers, tools, and integrations. Documents the built-in native MCP client — configure servers in config.yaml for automatic tool discovery.\n    - native-mcp: Built-in MCP (Model Context Protocol) client that connect...\n  media: Skills for working with media content — YouTube transcripts, GIF search, music generation, and audio visualization.\n    - gif-search: Search and download GIFs from Tenor using curl. No depend...\n    - heartmula: Set up and run HeartMuLa, the open-source music generatio...\n    - songsee: Generate spectrograms and audio feature visualizations (m...\n    - spotify: Control Spotify — play music, search the catalog, manage ...\n    - youtube-content: Fetch YouTube video transcripts and transform them into s...\n  mlops: Knowledge and Tools for Machine Learning Operations - tools and frameworks for training, fine-tuning, deploying, and optimizing ML/AI models\n    - huggingface-hub: Hugging Face Hub CLI (hf) — search, download, and upload ...\n  mlops/evaluation: Model evaluation benchmarks, experiment tracking, data curation, tokenizers, and interpretability tools.\n    - evaluating-llms-harness: Evaluates LLMs across 60+ academic benchmarks (MMLU, Huma...\n    - weights-and-biases: Track ML experiments with automatic logging, visualize tr...\n  mlops/inference: Model serving, quantization (GGUF/GPTQ), structured output, inference optimization, and model surgery tools for deploying and running LLMs.\n    - llama-cpp: llama.cpp local GGUF inference + HF Hub model discovery.\n    - obliteratus: Remove refusal behaviors from open-weight LLMs using OBLI...\n    - outlines: Guarantee valid JSON/XML/code structure during generation...\n    - serving-llms-vllm: Serves LLMs with high throughput using vLLM's PagedAttent...\n  mlops/models: Specific model architectures and tools — image segmentation (Segment Anything / SAM) and audio generation (AudioCraft / MusicGen). Additional model skills (CLIP, Stable Diffusion, Whisper, LLaVA) are available as optional skills.\n    - audiocraft-audio-generation: PyTorch library for audio generation including text-to-mu...\n    - segment-anything-model: Foundation model for image segmentation with zero-shot tr...\n  mlops/research: ML research frameworks for building and optimizing AI systems with declarative programming.\n    - dspy: Build complex AI systems with declarative programming, op...\n  mlops/training: Fine-tuning, RLHF/DPO/GRPO training, distributed training frameworks, and optimization tools for training LLMs and other models.\n    - axolotl: Expert guidance for fine-tuning LLMs with Axolotl - YAML ...\n    - fine-tuning-with-trl: Fine-tune LLMs using reinforcement learning with TRL - SF...\n    - unsloth: Expert guidance for fast fine-tuning with Unsloth - 2-5x ...\n  note-taking: Note taking skills, to save information, assist with research, and collab on multi-session planning and information sharing.\n    - obsidian: Read, search, and create notes in the Obsidian vault.\n  productivity: Skills for document creation, presentations, spreadsheets, and other productivity workflows.\n    - google-workspace: Gmail, Calendar, Drive, Contacts, Sheets, and Docs integr...\n    - linear: Manage Linear issues, projects, and teams via the GraphQL...\n    - maps: Location intelligence — geocode a place, reverse-geocode ...\n    - nano-pdf: Edit PDFs with natural-language instructions using the na...\n    - notion: Notion API for creating and managing pages, databases, an...\n    - ocr-and-documents: Extract text from PDFs and scanned documents. Use web_ext...\n    - powerpoint: Use this skill any time a .pptx file is involved in any w...\n  red-teaming:\n    - godmode: Jailbreak API-served LLMs using G0DM0D3 techniques — Pars...\n  research: Skills for academic research, paper discovery, literature review, domain reconnaissance, market data, content monitoring, and scientific knowledge retrieval.\n    - arxiv: Search and retrieve academic papers from arXiv using thei...\n    - blogwatcher: Monitor blogs and RSS/Atom feeds for updates using the bl...\n    - llm-wiki: Karpathy's LLM Wiki — build and maintain a persistent, in...\n    - platform-rules-research: 中国社交媒体平台规则页面抓取方法论 — 系统探测各平台官方规则/协议/公约页面的有效URL和访问策略\n    - polymarket: Query Polymarket prediction market data — search markets,...\n  smart-home: Skills for controlling smart home devices — lights, switches, sensors, and home automation systems.\n    - openhue: Control Philips Hue lights, rooms, and scenes via the Ope...\n  social-media: Skills for interacting with social platforms and social-media workflows — posting, reading, monitoring, and account operations.\n    - multi-platform-compliance: 中国主流社交媒体平台财经内容合规系统 — 覆盖抖音/快手/小红书/视频号/B站\n    - xurl: Interact with X/Twitter via xurl, the official X API CLI....\n  software-development:\n    - plan: Plan mode for Hermes — inspect context, write a markdown ...\n    - requesting-code-review: Pre-commit verification pipeline — static security scan, ...\n    - subagent-driven-development: Use when executing implementation plans with independent ...\n    - systematic-debugging: Use when encountering any bug, test failure, or unexpecte...\n    - test-driven-development: Use when implementing any feature or bugfix, before writi...\n    - writing-plans: Use when you have a spec or requirements for a multi-step...\n  system:\n    - ai-action-log: AI行为记录日志 — 记录AI自身重要行为和决策，让用户能追溯AI在会话中做了什么\n</available_skills>\n\nOnly proceed without loading a skill if genuinely none are relevant to the task.\n\nConversation started: Sunday, April 26, 2026 04:13 PM\nModel: MiniMax-M2.7\nProvider: minimax-cn\n\nYou are in a Feishu (Lark) workspace communicating with your user. Feishu renders Markdown in messages — bold, italic, code blocks, and links are supported. You can send media files natively: include MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, .webp) are uploaded and displayed inline, audio files as voice messages, and other files as attachments.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_back",
+        "description": "Navigate back to the previous page in browser history. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click on an element identified by its ref ID from the snapshot (e.g., '@e5'). The ref IDs are shown in square brackets in the snapshot output. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e5', '@e12')"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_console",
+        "description": "Get browser console output and JavaScript errors from the current page. Returns console.log/warn/error/info messages and uncaught JS exceptions. Use this to detect silent JavaScript errors, failed API calls, and application warnings. Requires browser_navigate to be called first. When 'expression' is provided, evaluates JavaScript in the page context and returns the result — use this for DOM inspection, reading page state, or extracting data programmatically.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, clear the message buffers after reading"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate in the page context. Runs in the browser like DevTools console — full access to DOM, window, document. Return values are serialized to JSON. Example: 'document.title' or 'document.querySelectorAll(\"a\").length'"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_get_images",
+        "description": "Get a list of all images on the current page with their URLs and alt text. Useful for finding images to analyze with the vision tool. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser. Initializes the session and loads the page. Must be called before other browser tools. Use browser tools when you need to interact with a page (click, fill forms, dynamic content). Returns a compact page snapshot with interactive elements and ref IDs — no need to call browser_snapshot separately after navigating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to (e.g., 'https://example.com')"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_press",
+        "description": "Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Key to press (e.g., 'Enter', 'Tab', 'Escape', 'ArrowDown')"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_scroll",
+        "description": "Scroll the page in a direction. Use this to reveal more content that may be below or above the current viewport. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Direction to scroll"
+            }
+          },
+          "required": [
+            "direction"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Get a text-based snapshot of the current page's accessibility tree. Returns interactive elements with ref IDs (like @e1, @e2) for browser_click and browser_type. full=false (default): compact view with interactive elements. full=true: complete page content. Snapshots over 8000 chars are truncated or LLM-summarized. Requires browser_navigate first. Note: browser_navigate already returns a compact snapshot — use this to refresh after interactions that change the page, or with full=true for complete content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "boolean",
+              "description": "If true, returns complete page content. If false (default), returns compact view with interactive elements only.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into an input field identified by its ref ID. Clears the field first, then types the new text. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e3')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "ref",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_vision",
+        "description": "Take a screenshot of the current page and analyze it with vision AI. Use this when you need to visually understand what's on the page - especially useful for CAPTCHAs, visual verification challenges, complex layouts, or when the text snapshot doesn't capture important visual information. Returns both the AI analysis and a screenshot_path that you can share with the user by including MEDIA:<screenshot_path> in your response. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "What you want to know about the page visually. Be specific about what you're looking for."
+            },
+            "annotate": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, overlay numbered [N] labels on interactive elements. Each [N] maps to ref @eN for subsequent browser commands. Useful for QA and spatial reasoning about page layout."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "clarify",
+        "description": "Ask the user a question when you need clarification, feedback, or a decision before proceeding. Supports two modes:\n\n1. **Multiple choice** — provide up to 4 choices. The user picks one or types their own answer via a 5th 'Other' option.\n2. **Open-ended** — omit choices entirely. The user types a free-form response.\n\nUse this tool when:\n- The task is ambiguous and you need the user to choose an approach\n- You want post-task feedback ('How did that work out?')\n- You want to offer to save a skill or update memory\n- A decision has meaningful trade-offs the user should weigh in on\n\nDo NOT use this tool for simple yes/no confirmation of dangerous commands (the terminal tool handles that). Prefer making a reasonable default choice yourself when the decision is low-stakes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "The question to present to the user."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 4,
+              "description": "Up to 4 answer choices. Omit this parameter entirely to ask an open-ended question. When provided, the UI automatically appends an 'Other (type your answer)' option."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "cronjob",
+        "description": "Manage scheduled cron jobs with a single compressed tool.\n\nUse action='create' to schedule a new job from a prompt or one or more skills.\nUse action='list' to inspect jobs.\nUse action='update', 'pause', 'resume', 'remove', or 'run' to manage an existing job.\n\nTo stop a job the user no longer wants: first action='list' to find the job_id, then action='remove' with that job_id. Never guess job IDs — always list first.\n\nJobs run in a fresh session with no current-chat context, so prompts must be self-contained.\nIf skills are provided on create, the future cron run loads those skills in order, then follows the prompt as the task instruction.\nOn update, passing skills=[] clears attached skills.\n\nNOTE: The agent's final response is auto-delivered to the target. Put the primary\nuser-facing content in the final response. Cron jobs run autonomously with no user\npresent — they cannot ask questions or request clarification.\n\nImportant safety rule: cron-run sessions should not recursively schedule more cron jobs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "One of: create, list, update, pause, resume, remove, run"
+            },
+            "job_id": {
+              "type": "string",
+              "description": "Required for update/pause/resume/remove/run"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "For create: the full self-contained prompt. If skills are also provided, this becomes the task instruction paired with those skills."
+            },
+            "schedule": {
+              "type": "string",
+              "description": "For create/update: '30m', 'every 2h', '0 9 * * *', or ISO timestamp"
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional human-friendly name"
+            },
+            "repeat": {
+              "type": "integer",
+              "description": "Optional repeat count. Omit for defaults (once for one-shot, forever for recurring)."
+            },
+            "deliver": {
+              "type": "string",
+              "description": "Omit this parameter to auto-deliver back to the current chat and topic (recommended). Auto-detection preserves thread/topic context. Only set explicitly when the user asks to deliver somewhere OTHER than the current conversation. Values: 'origin' (same as omitting), 'local' (no delivery, save only), or platform:chat_id:thread_id for a specific destination. Examples: 'telegram:-1001234567890:17585', 'discord:#engineering', 'sms:+15551234567'. WARNING: 'platform:chat_id' without :thread_id loses topic targeting."
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional ordered list of skill names to load before executing the cron prompt. On update, pass an empty array to clear attached skills."
+            },
+            "model": {
+              "type": "object",
+              "description": "Optional per-job model override. If provider is omitted, the current main provider is pinned at creation time so the job stays stable.",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "description": "Provider name (e.g. 'openrouter', 'anthropic'). Omit to use and pin the current provider."
+                },
+                "model": {
+                  "type": "string",
+                  "description": "Model name (e.g. 'anthropic/claude-sonnet-4', 'claude-sonnet-4')"
+                }
+              },
+              "required": [
+                "model"
+              ]
+            },
+            "script": {
+              "type": "string",
+              "description": "Optional path to a Python script that runs before each cron job execution. Its stdout is injected into the prompt as context. Use for data collection and change detection. Relative paths resolve under ~/.hermes/scripts/. On update, pass empty string to clear."
+            },
+            "enabled_toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of toolset names to restrict the job's agent to (e.g. [\"web\", \"terminal\", \"file\", \"delegation\"]). When set, only tools from these toolsets are loaded, significantly reducing input token overhead. When omitted, all default tools are loaded. Infer from the job's prompt — e.g. use \"web\" if it calls web_search, \"terminal\" if it runs scripts, \"file\" if it reads files, \"delegation\" if it calls delegate_task. On update, pass an empty array to clear."
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Optional absolute path to run the job from. When set, AGENTS.md / CLAUDE.md / .cursorrules from that directory are injected into the system prompt, and the terminal/file/code_exec tools use it as their working directory — useful for running a job inside a specific project repo. Must be an absolute path that exists. When unset (default), preserves the original behaviour: no project context files, tools use the scheduler's cwd. On update, pass an empty string to clear. Jobs with workdir run sequentially (not parallel) to keep per-job directories isolated."
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_task",
+        "description": "Spawn one or more subagents to work on tasks in isolated contexts. Each subagent gets its own conversation, terminal session, and toolset. Only the final summary is returned -- intermediate tool results never enter your context window.\n\nTWO MODES (one of 'goal' or 'tasks' is required):\n1. Single task: provide 'goal' (+ optional context, toolsets)\n2. Batch (parallel): provide 'tasks' array with up to delegation.max_concurrent_children items (default 3, configurable via config.yaml, no hard ceiling). All run concurrently and results are returned together. Nested delegation requires role='orchestrator' and delegation.max_spawn_depth >= 2.\n\nWHEN TO USE delegate_task:\n- Reasoning-heavy subtasks (debugging, code review, research synthesis)\n- Tasks that would flood your context with intermediate data\n- Parallel independent workstreams (research A and B simultaneously)\n\nWHEN NOT TO USE (use these instead):\n- Mechanical multi-step work with no reasoning needed -> use execute_code\n- Single tool call -> just call the tool directly\n- Tasks needing user interaction -> subagents cannot use clarify\n\nIMPORTANT:\n- Subagents have NO memory of your conversation. Pass all relevant info (file paths, error messages, constraints) via the 'context' field.\n- Leaf subagents (role='leaf', the default) CANNOT call: delegate_task, clarify, memory, send_message, execute_code.\n- Orchestrator subagents (role='orchestrator') retain delegate_task so they can spawn their own workers, but still cannot use clarify, memory, send_message, or execute_code. Orchestrators are bounded by delegation.max_spawn_depth (default 2) and can be disabled globally via delegation.orchestrator_enabled=false.\n- Each subagent gets its own terminal session (separate working directory and state).\n- Results are always returned as an array, one entry per task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history."
+            },
+            "context": {
+              "type": "string",
+              "description": "Background information the subagent needs: file paths, error messages, project structure, constraints. The more specific you are, the better the subagent performs."
+            },
+            "toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Toolsets to enable for this subagent. Default: inherits your enabled toolsets. Available toolsets: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Common patterns: ['terminal', 'file'] for code work, ['web'] for research, ['browser'] for web interaction, ['terminal', 'file', 'web'] for full-stack tasks."
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "Task goal"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Task-specific context"
+                  },
+                  "toolsets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Toolsets for this specific task. Available: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Use 'web' for network access, 'terminal' for shell, 'browser' for web interaction."
+                  },
+                  "acp_command": {
+                    "type": "string",
+                    "description": "Per-task ACP command override (e.g. 'claude'). Overrides the top-level acp_command for this task only."
+                  },
+                  "acp_args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Per-task ACP args override."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "leaf",
+                      "orchestrator"
+                    ],
+                    "description": "Per-task role override. See top-level 'role' for semantics."
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              },
+              "description": "Batch mode: tasks to run in parallel (limit configurable via delegation.max_concurrent_children, default 3). Each gets its own subagent with isolated context and terminal session. When provided, top-level goal/context/toolsets are ignored."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "leaf",
+                "orchestrator"
+              ],
+              "description": "Role of the child agent. 'leaf' (default) = focused worker, cannot delegate further. 'orchestrator' = can use delegate_task to spawn its own workers. Requires delegation.max_spawn_depth >= 2 in config; ignored (treated as 'leaf') when the child would exceed max_spawn_depth or when delegation.orchestrator_enabled=false."
+            },
+            "acp_command": {
+              "type": "string",
+              "description": "Override ACP command for child agents (e.g. 'claude', 'copilot'). When set, children use ACP subprocess transport instead of inheriting the parent's transport. Enables spawning Claude Code (claude --acp --stdio) or other ACP-capable agents from any parent, including Discord/Telegram/CLI."
+            },
+            "acp_args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Arguments for the ACP command (default: ['--acp', '--stdio']). Only used when acp_command is set. Example: ['--acp', '--stdio', '--model', 'claude-opus-4-6']"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Run a Python script that can call Hermes tools programmatically. Use this when you need 3+ tool calls with processing logic between them, need to filter/reduce large tool outputs before they enter your context, need conditional branching (if X then Y else Z), or need to loop (fetch N pages, process N files, retry on failure).\n\nUse normal tool calls instead when: single tool call with no processing, you need to see the full result and apply complex reasoning, or the task requires interactive user input.\n\nAvailable via `from hermes_tools import ...`:\n\n  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}\n  write_file(path: str, content: str) -> dict\n    Always overwrites the entire file.\n  search_files(pattern: str, target=\"content\", path=\".\", file_glob=None, limit=50) -> dict\n    target: \"content\" (search inside files) or \"files\" (find files by name). Returns {\"matches\": [...]}\n  patch(path: str, old_string: str, new_string: str, replace_all: bool = False) -> dict\n    Replaces old_string with new_string in the file.\n  terminal(command: str, timeout=None, workdir=None) -> dict\n    Foreground only (no background/pty). Returns {\"output\": \"...\", \"exit_code\": N}\n\nLimits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. terminal() is foreground-only (no background or pty).\n\nScripts run in the session's working directory with the active venv's python, so project deps (pandas, etc.) and relative paths work like in terminal().\n\nPrint your final result to stdout. Use Python stdlib (json, re, math, csv, datetime, collections, etc.) for processing between tool calls.\n\nAlso available (no import needed — built into hermes_tools):\n  json_parse(text: str) — json.loads with strict=False; use for terminal() output with control chars\n  shell_quote(s: str) — shlex.quote(); use when interpolating dynamic strings into shell commands\n  retry(fn, max_attempts=3, delay=2) — retry with exponential backoff for transient failures",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python code to execute. Import tools with `from hermes_tools import terminal, ...` and print your final result to stdout."
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_doc_read",
+        "description": "Read the full content of a Feishu/Lark document as plain text. Useful when you need more context beyond the quoted text in a comment.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "doc_token": {
+              "type": "string",
+              "description": "The document token (from the document URL or comment context)."
+            }
+          },
+          "required": [
+            "doc_token"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_add_comment",
+        "description": "Add a new whole-document comment on a Feishu document. Use this for whole-document comments or as a fallback when reply_comment fails with code 1069302.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "content": {
+              "type": "string",
+              "description": "The comment text content (plain text only, no markdown)."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            }
+          },
+          "required": [
+            "file_token",
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_list_comment_replies",
+        "description": "List all replies in a comment thread on a Feishu document.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "comment_id": {
+              "type": "string",
+              "description": "The comment ID to list replies for."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            },
+            "page_size": {
+              "type": "integer",
+              "description": "Number of replies per page (max 100).",
+              "default": 100
+            },
+            "page_token": {
+              "type": "string",
+              "description": "Pagination token for next page."
+            }
+          },
+          "required": [
+            "file_token",
+            "comment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_list_comments",
+        "description": "List comments on a Feishu document. Use is_whole=true to list whole-document comments only.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            },
+            "is_whole": {
+              "type": "boolean",
+              "description": "If true, only return whole-document comments.",
+              "default": false
+            },
+            "page_size": {
+              "type": "integer",
+              "description": "Number of comments per page (max 100).",
+              "default": 100
+            },
+            "page_token": {
+              "type": "string",
+              "description": "Pagination token for next page."
+            }
+          },
+          "required": [
+            "file_token"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_reply_comment",
+        "description": "Reply to a local comment thread on a Feishu document. Use this for local (quoted-text) comments. For whole-document comments, use feishu_drive_add_comment instead.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "comment_id": {
+              "type": "string",
+              "description": "The comment ID to reply to."
+            },
+            "content": {
+              "type": "string",
+              "description": "The reply text content (plain text only, no markdown)."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            }
+          },
+          "required": [
+            "file_token",
+            "comment_id",
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "memory",
+        "description": "Save durable information to persistent memory that survives across sessions. Memory is injected into future turns, so keep it compact and focused on facts that will still matter later.\n\nWHEN TO SAVE (do this proactively, don't wait to be asked):\n- User corrects you or says 'remember this' / 'don't do that again'\n- User shares a preference, habit, or personal detail (name, role, timezone, coding style)\n- You discover something about the environment (OS, installed tools, project structure)\n- You learn a convention, API quirk, or workflow specific to this user's setup\n- You identify a stable fact that will be useful again in future sessions\n\nPRIORITY: User preferences and corrections > environment facts > procedural knowledge. The most valuable memory prevents the user from having to repeat themselves.\n\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts.\nIf you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\n\nTWO TARGETS:\n- 'user': who the user is -- name, role, preferences, communication style, pet peeves\n- 'memory': your notes -- environment facts, project conventions, tool quirks, lessons learned\n\nACTIONS: add (new entry), replace (update existing -- old_text identifies it), remove (delete -- old_text identifies it).\n\nSKIP: trivial/obvious info, things easily re-discovered, raw data dumps, and temporary task state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "replace",
+                "remove"
+              ],
+              "description": "The action to perform."
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "memory",
+                "user"
+              ],
+              "description": "Which memory store: 'memory' for personal notes, 'user' for user profile."
+            },
+            "content": {
+              "type": "string",
+              "description": "The entry content. Required for 'add' and 'replace'."
+            },
+            "old_text": {
+              "type": "string",
+              "description": "Short unique substring identifying the entry to replace or remove."
+            }
+          },
+          "required": [
+            "action",
+            "target"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_message",
+        "description": "Send a message to a connected messaging platform, or list available targets.\n\nIMPORTANT: When the user asks to send to a specific channel or person (not just a bare platform name), call send_message(action='list') FIRST to see available targets, then send to the correct one.\nIf the user just says a platform name like 'send to telegram', send directly to the home channel without listing first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "send",
+                "list"
+              ],
+              "description": "Action to perform. 'send' (default) sends a message. 'list' returns all available channels/contacts across connected platforms."
+            },
+            "target": {
+              "type": "string",
+              "description": "Delivery target. Format: 'platform' (uses home channel), 'platform:#channel-name', 'platform:chat_id', or 'platform:chat_id:thread_id' for Telegram topics and Discord threads. Examples: 'telegram', 'telegram:-1001234567890:17585', 'discord:999888777:555444333', 'discord:#bot-home', 'slack:#engineering', 'signal:+155****4567', 'matrix:!roomid:server.org', 'matrix:@user:server.org'"
+            },
+            "message": {
+              "type": "string",
+              "description": "The message text to send"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "session_search",
+        "description": "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- every past session is searchable, and this tool summarizes what happened.\n\nTWO MODES:\n1. Recent sessions (no query): Call with no arguments to see what was worked on recently. Returns titles, previews, and timestamps. Zero LLM cost, instant. Start here when the user asks what were we working on or what did we do recently.\n2. Keyword search (with query): Search for specific topics across all past sessions. Returns LLM-generated summaries of matching sessions.\n\nUSE THIS PROACTIVELY when:\n- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n- The user asks about a topic you worked on before but don't have in current context\n- The user references a project, person, or concept that seems familiar but isn't in memory\n- You want to check if you've solved a similar problem before\n- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\nDon't hesitate to search when it is actually cross-session -- it's fast and cheap. Better to search and confirm than to guess or ask the user to repeat themselves.\n\nSearch syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses sessions that only mention some terms. If a broad OR query returns nothing, try individual keyword searches in parallel. Returns summaries of the top matching sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query — keywords, phrases, or boolean expressions to find in past sessions. Omit this parameter entirely to browse recent sessions instead (returns titles, previews, timestamps with no LLM cost)."
+            },
+            "role_filter": {
+              "type": "string",
+              "description": "Optional: only search messages from specific roles (comma-separated). E.g. 'user,assistant' to skip tool outputs."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to summarize (default: 3, max: 5).",
+              "default": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_manage",
+        "description": "Manage skills (create, update, delete). Skills are your procedural memory — reusable approaches for recurring task types. New skills go to ~/.hermes/skills/; existing skills can be modified wherever they live.\n\nActions: create (full SKILL.md + optional category), patch (old_string/new_string — preferred for fixes), edit (full SKILL.md rewrite — major overhauls only), delete, write_file, remove_file.\n\nCreate when: complex task succeeded (5+ calls), errors overcome, user-corrected approach worked, non-trivial workflow discovered, or user asks you to remember a procedure.\nUpdate when: instructions stale/wrong, OS-specific failures, missing steps or pitfalls found during use. If you used a skill and hit issues not covered by it, patch it immediately.\n\nAfter difficult/iterative tasks, offer to save as a skill. Skip for simple one-offs. Confirm with user before creating/deleting.\n\nGood skills: trigger conditions, numbered steps with exact commands, pitfalls section, verification steps. Use skill_view() to see format examples.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "patch",
+                "edit",
+                "delete",
+                "write_file",
+                "remove_file"
+              ],
+              "description": "The action to perform."
+            },
+            "name": {
+              "type": "string",
+              "description": "Skill name (lowercase, hyphens/underscores, max 64 chars). Must match an existing skill for patch/edit/delete/write_file/remove_file."
+            },
+            "content": {
+              "type": "string",
+              "description": "Full SKILL.md content (YAML frontmatter + markdown body). Required for 'create' and 'edit'. For 'edit', read the skill first with skill_view() and provide the complete updated text."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'patch'). Must be unique unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'patch'). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "For 'patch': replace all occurrences instead of requiring a unique match (default: false)."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category/domain for organizing the skill (e.g., 'devops', 'data-science', 'mlops'). Creates a subdirectory grouping. Only used with 'create'."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "Path to a supporting file within the skill directory. For 'write_file'/'remove_file': required, must be under references/, templates/, scripts/, or assets/. For 'patch': optional, defaults to SKILL.md if omitted."
+            },
+            "file_content": {
+              "type": "string",
+              "description": "Content for the file. Required for 'write_file'."
+            }
+          },
+          "required": [
+            "action",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_view",
+        "description": "Skills allow for loading information about specific tasks and workflows, as well as scripts and templates. Load a skill's full content or access its linked files (references, templates, scripts). First call returns SKILL.md content plus a 'linked_files' dict showing available references/templates/scripts. To access those, call again with file_path parameter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The skill name (use skills_list to see available skills). For plugin-provided skills, use the qualified form 'plugin:skill' (e.g. 'superpowers:writing-plans')."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "OPTIONAL: Path to a linked file within the skill (e.g., 'references/api.md', 'templates/config.yaml', 'scripts/validate.py'). Omit to get the main SKILL.md content."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skills_list",
+        "description": "List available skills (name + description). Use skill_view(name) to load full content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified when the process finishes — no polling needed. Use this for tasks that take a while (tests, builds, deployments) so you can keep working on other things in the meantime.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. Fires a notification the first time each pattern matches a line of output. **Use ONLY for mid-process signals** you want to react to before the process exits — errors, readiness markers, intermediate step markers (e.g. [\"ERROR\", \"Traceback\", \"listening on port\"]). Do NOT use for end-of-run markers (summary headers, 'DONE', 'PASS' printed right before exit) — use `notify_on_complete` for that instead. Stacking end-of-run patterns on top of `notify_on_complete` produces duplicate, delayed notifications that arrive after you've already moved on, since delivery is asynchronous and continues after the process exits."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "text_to_speech",
+        "description": "Convert text to speech audio. Returns a MEDIA: path that the platform delivers as a voice message. On Telegram it plays as a voice bubble, on Discord/WhatsApp as an audio attachment. In CLI mode, saves to ~/voice-memos/. Voice and provider are user-configured, not model-selected.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to convert to speech. Provider-specific character caps apply and are enforced automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); over-long input is truncated."
+            },
+            "output_path": {
+              "type": "string",
+              "description": "Optional custom file path to save the audio. Defaults to ~/.hermes/audio_cache/<timestamp>.mp3"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "todo",
+        "description": "Manage your task list for the current session. Use for complex tasks with 3+ steps or when the user provides multiple tasks. Call with no parameters to read the current list.\n\nWriting:\n- Provide 'todos' array to create/update items\n- merge=false (default): replace the entire list with a fresh plan\n- merge=true: update existing items by id, add any new ones\n\nEach item: {id: string, content: string, status: pending|in_progress|completed|cancelled}\nList order is priority. Only ONE item in_progress at a time.\nMark items completed immediately when done. If something fails, cancel it and add a revised item.\n\nAlways returns the full current list.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "todos": {
+              "type": "array",
+              "description": "Task items to write. Omit to read current list.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique item identifier"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Task description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "description": "Current status"
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "status"
+                ]
+              }
+            },
+            "merge": {
+              "type": "boolean",
+              "description": "true: update existing items by id, add new ones. false (default): replace the entire list.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "vision_analyze",
+        "description": "Analyze images using AI vision. Provides a comprehensive description and answers a specific question about the image content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_url": {
+              "type": "string",
+              "description": "Image URL (http/https) or local file path to analyze."
+            },
+            "question": {
+              "type": "string",
+              "description": "Your specific question or request about the image to resolve. The AI will automatically provide a complete image description AND answer your specific question."
+            }
+          },
+          "required": [
+            "image_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 42,
+  "messages": [
+    {
+      "role": "user",
+      "content": "那问题就来了，我本人不帅气，而且说话也不是特别厉害，怎么做自媒体？"
+    },
+    {
+      "role": "assistant",
+      "content": "这是个很实在的问题。先给你吃颗定心丸：\n\n**自媒体成功的核心根本不是\"帅\"或\"口才好\"**。以下是事实：\n\n---\n\n## 不靠脸不靠嘴的成功路径\n\n| 赛道 | 代表形式 | 为什么能火 |\n|------|----------|------------|\n| **知识干货** | 科普、教程、评测 | 价值驱动，关注的是信息不是人 |\n| **工具类** | 资源汇总、效率技巧、合集 | 实用主义，用户冲着内容来 |\n| **图文类** | 小红书图文、知乎回答 | 内容质量优先，文字比脸重要 |\n| **虚拟形象/动画** | AI动画、数字人 | 用技术手段绕过颜值问题 |\n| **声音类** | 播客、ASMR | 耳朵经济，内容>形象 |\n| **剪辑/搬运** | 影视解说、游戏集锦 | 二次创作，个人魅力弱化 |\n\n---\n\n## AI能帮你的\n\n我们之前讨论的 SuperGrok 视频 + AI 辅助方案，正好解决了你的两个顾虑：\n\n1. **不帅气** → AI生成画面/动画/数字人，或者纯素材剪辑模式，完全规避真人出镜\n2. **说话不够厉害** → 文案由我生成/优化，录音可以剪辑拼接，AI还能帮你做声音克隆\n\n---\n\n## 你需要想清楚的核心问题\n\n不是\"我够不够格\"，而是：\n\n> **你能给哪类观众提供他们想要的东西？**\n\n- 你的知识背景是什么？（财经/科技/生活/职场...）\n- 观众的问题你能解决吗？\n- 你的差异化在哪里？\n\n---\n\n想聊一下你初步的内容方向吗？比如我们之前提的4个实验视频主题，或者是其他你感兴趣的领域？",
+      "reasoning": "用户在问一个关于自媒体创作的问题，表达了自己的担忧：不帅气、说话不特别厉害。这是一个关于内容创作方向的问题，需要结合用户的背景来回答。\n\n用户背景（从memory中获取）：\n- 短视频平台（抖音/快手/小红书/视频号）流量变现方向的内容创作者\n- 第一个月是\"实验月\"\n- 工作模式：Creative Director（创意总监）—— 只做决策，不实际操作，所有执行由AI完成\n- 最终目标是平台流量分成变现\n\n这不是一个技术任务，而是一个咨询/创意方向的问题。用户似乎在做决策前的思考，我需要给出有价值的分析，帮助用户理解自媒体成功的本质。\n\n关键洞察：\n1. 自媒体成功的核心不是\"脸\"或\"口才\"，而是\"提供价值\"或\"引起共鸣\"\n2. 有很多成功的博主外表普通、说话也不犀利——他们靠的是内容定位、知识、垂直细分市场\n3. AI视频工具（如我们讨论的SuperGrok）可以解决\"不帅气\"的问题——AI生成的虚拟形象/动画/素材化处理\n4. \"说话不厉害\"也有解决方案：文案由AI辅助/生成，录音可以剪辑优化\n\n我应该：\n\n\n- 直接回应用户的顾虑，拆解这些障碍\n- 指出几个\"不靠脸不靠嘴\"的成功博主案例\n- 明确AI可以如何弥补这些短板\n- 提出几个具体的内容方向供用户选择，帮助他思考自己的定位",
+      "reasoning_details": [
+        {
+          "signature": "2c9469b5611d5940da4d440400b967611c460339254849aff4290d76d36f6ba2",
+          "thinking": "用户在问一个关于自媒体创作的问题，表达了自己的担忧：不帅气、说话不特别厉害。这是一个关于内容创作方向的问题，需要结合用户的背景来回答。\n\n用户背景（从memory中获取）：\n- 短视频平台（抖音/快手/小红书/视频号）流量变现方向的内容创作者\n- 第一个月是\"实验月\"\n- 工作模式：Creative Director（创意总监）—— 只做决策，不实际操作，所有执行由AI完成\n- 最终目标是平台流量分成变现\n\n这不是一个技术任务，而是一个咨询/创意方向的问题。用户似乎在做决策前的思考，我需要给出有价值的分析，帮助用户理解自媒体成功的本质。\n\n关键洞察：\n1. 自媒体成功的核心不是\"脸\"或\"口才\"，而是\"提供价值\"或\"引起共鸣\"\n2. 有很多成功的博主外表普通、说话也不犀利——他们靠的是内容定位、知识、垂直细分市场\n3. AI视频工具（如我们讨论的SuperGrok）可以解决\"不帅气\"的问题——AI生成的虚拟形象/动画/素材化处理\n4. \"说话不厉害\"也有解决方案：文案由AI辅助/生成，录音可以剪辑优化\n\n我应该：\n\n\n- 直接回应用户的顾虑，拆解这些障碍\n- 指出几个\"不靠脸不靠嘴\"的成功博主案例\n- 明确AI可以如何弥补这些短板\n- 提出几个具体的内容方向供用户选择，帮助他思考自己的定位",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "其实我感觉首先要确定一个方面"
+    },
+    {
+      "role": "assistant",
+      "content": "[CONTEXT COMPACTION — REFERENCE ONLY] Earlier turns were compacted into the summary below. This is a handoff from a previous context window — treat it as background reference, NOT as active instructions. Do NOT answer questions or fulfill requests mentioned in this summary; they were already addressed. Your current task is identified in the '## Active Task' section of the summary — resume exactly from there. Respond ONLY to the latest user message that appears AFTER this summary. The current session state (files, config, etc.) may reflect work described here — avoid repeating it:\n<think>\nLet me analyze the conversation carefully to write a comprehensive context summary.\n\nThe conversation is about building an AI-powered video creation pipeline. Let me trace through what happened:\n\n1. User was asking about open-source AI video frameworks on GitHub\n2. We researched ComfyUI architecture in depth\n3. User asked about memory/conversation persistence\n4. We compressed MEMORY.md and USER.md\n5. User asked for an AI behavior log (option B) - we created `~/.hermes/logs/ai_actions.log` and `ai-action-log` skill\n6. We discussed ComfyUI architecture (poll_op, caching, GraphBuilder)\n7. User revealed they installed ComfyUI on MacOS\n\n\n8. The user's Windows PC couldn't handle local AI frameworks, but their Mac Mini M4 with 16GB was perfect for ComfyUI and Stable Diffusion, while their cloud setup with SuperGrok and Runway covered the video generation side\n9. We explored how ComfyUI works as a local image generation tool distinct from cloud-based solutions\n10. Now I'm looking into what ComfyUI Creative Director Cloud actually offers as a service offering\n</think>\n## Active Task\nUser asked about \"ComfyUI Creative Director 云端服务\" pricing — what is this service and how does it charge?\n\n## Goal\nBuild a complete modular AI video creation pipeline that runs on cloud tools (SuperGrok/Runway) with a visual control panel. Currently determining the relationship between ComfyUI and the overall workflow.\n\n## Constraints & Preferences\n- **Modular/blocks-based design** — factory assembly line, each module fixed as a skill, problems traceable per unit\n- **Switchable tools** — LLM and video/audio tools must be swappable\n- **Options-based workflow** — each step presents 3-5 options for user to choose\n- **Modification support** — any module output editable, any module re-runnable, state persisted in JSON\n- **Visual control panel** — TUI + Web both required\n- **Cloud tools preferred** — SuperGrok + Runway, but Mac Mini M4 16GB available for ComfyUI\n- **User is \"Creative Director\"** — does not code, only makes decisions\n- **Hardware**: Mac Mini M4 16GB (ComfyUI capable), Windows PC i5-12400f/32GB/AMD 6700 XT 12GB (not suitable for AI frameworks), MacOS desktop\n- **Tools**: SuperGrok $30/mo, Runway $15/mo, ElevenLabs $5/mo, MiniMax API (key in conversation)\n\n## Completed Actions\n\n1. **ComfyUI source code research** — cloned ComfyUI, analyzed execution.py, graph.py, caching.py, api client — extracted: DAG workflow engine, poll_op async polling, 3-layer caching, GraphBuilder pattern, node input/output type system [tool: terminal + read_file]\n2. **MEMORY.md compressed and reorganized** — 3,581→1,630→2,360 chars; added ComfyUI architecture notes; current usage 2,569 chars [tool: write_file + patch]\n3. **USER.md compressed** — 3,092→699 chars [tool: write_file]\n4. **ai-action-log skill created** — skill at `~/.hermes/skills/system/ai-action-log/SKILL.md`, log at `~/.hermes/logs/ai_actions.log`, format: `[YYYY-MM-DD HH:MM] 分类 | 事件描述 | 详情` [tool: skill_manage]\n5. **AI behavior log initialized** — today's events logged: ComfyUI research, memory compression, user notifying about Mac ComfyUI install, log system creation [tool: terminal]\n6. **browser-agent tested** — framework at `~/.hermes/skills/browser-automation/browser-agent/`, confirmed working [tool: terminal]\n7. **Multi-platform compliance system** — 5 platforms researched (Douyin✅ Kuaishou✅ Weixinhao✅ Bilibili⚠️ Xiaohongshu❌), SKILL.md at `~/.hermes/skills/social-media/multi-platform-compliance/SKILL.md` [tool: delegate_task + Playwright]\n8. **creative-workflow-dashboard built** — Web panel (Flask port 8765, PID 74103), TUI panel (curses), DAG engine, JSON state persistence; at `~/.hermes/skills/creative/creative-workflow-dashboard/` [tool: write_file + terminal]\n9. **Checked ComfyUI Creative Director Cloud** — attempted browser navigation to comfy.org; fell back to curl; found \"LAUNCH CLOUD\" button on homepage; no clear pricing visible in raw HTML [tool: browser_navigate + terminal]\n\n## Active State\n- MEMORY.md: 2,569 chars (well within limit after compression + reorganization)\n- USER.md: 699 chars\n- AI action log: `~/.hermes/logs/ai_actions.log` with 5 entries from today\n- creative-workflow-dashboard: Flask server not currently running (was PID 74103, likely stopped)\n- All 57 original session files preserved in `~/.hermes/sessions/`\n- ComfyUI installed on user's Mac Mini M4 16GB (confirmed sufficient)\n- SuperGrok, Runway, ElevenLabs on cloud subscription\n\n## In Progress\nResearching \"ComfyUI Creative Director Cloud\" service — what it is, how it charges, whether it fits the workflow.\n\n## Blocked\n- **ComfyUI Creative Director Cloud**: Browser navigation failed (Chrome sandbox issue in Linux VM environment). Raw HTML from comfy.org shows a \"LAUNCH CLOUD\" button but pricing is not visible in the raw HTML response. Need alternative approach to find pricing info.\n\n## Key Decisions\n\n- **AMD vs NVIDIA**: User's Windows PC has AMD 6700 XT 12GB — poor support for mainstream AI frameworks, CUDA ecosystem is NVIDIA-heavy. Decided not to pursue local deployment on Windows.\n- **Mac Mini M4 16GB**: Confirmed sufficient for ComfyUI + Stable Diffusion (SD 1.5 ~4GB, SDXL ~6-7GB; 16GB unified memory more than enough)\n- **ComfyUI purpose**: Clarified it's primarily an image generation tool (SD-based), NOT a video tool. Runway/SuperGrok handle video. ComfyUI is the \"printer driver\" — precise control over image generation parameters.\n- **MiniMax vs SD**: Clarified MiniMax is a text-processing LLM, NOT an image generation model. Stable Diffusion is the image generation model ComfyUI uses. They are complementary, not interchangeable.\n- **ComfyUI cloud**: Not a specific known product — \"ComfyUI Creative Director Cloud\" may refer to a third-party hosted ComfyUI service, or possibly a misremembered product name. Pricing needs further research.\n- **AI behavior log**: User chose Option B — logs AI's own important actions and decisions. Format: `[YYYY-MM-DD HH:MM] 分类 | 事件描述 | 详情`. Trigger rule: MEMORY >80% MUST report to user, not silently compress.\n\n## Resolved Questions\n\n- **\"ComfyUI是什么\"**: A node-based visual workflow tool for image generation (primarily SD-based). Each node is a step, connected by data links on a canvas. Not for video — that's Runway's job.\n- **\"ComfyUI是画图还是做视频\"**: Image generation (文字→图片). Runway does 图片→视频. They are different tools.\n- **\"ComfyUI能精准还原文字吗\"**: More precise than other tools because it gives granular parameter control. Not magic — still needs user to configure nodes, but much more control than \"black box\" tools.\n- **\"ComfyUI收费吗\"**: Software is free/open-source. Models (like SD) are free. Running locally costs nothing beyond hardware.\n- **\"MiniMax能给ComfyUI用吗\"**: No. MiniMax is text-processing LLM; ComfyUI uses image generation models (Stable Diffusion). Different types of AI.\n- **\"SuperGrok能画图吗\"**: Yes — Imagine API within SuperGrok suite. Already included in $30/mo subscription.\n- **\"16GB Mac Mini够吗\"**: Confirmed yes — M4 16GB unified memory is comfortable for SDXL + ComfyUI.\n- **\"ComfyUI必须用指定模型吗\"**: No — ComfyUI is an interface for various image generation models. SD 1.5 (~4GB), SDXL (~6-7GB) both work.\n- **\"对话记忆是否完整存入长期记忆\"**: Partially — MEMORY.md/USER.md are persistent, but ComfyUI research details were NOT saved until user explicitly requested. Now saved.\n- **\"MEMORY满了我没汇报\"**: System silently compressed MEMORY.md and USER.md without notifying user. This was wrong. Trigger rule established: MEMORY >80% must report immediately.\n- **\"ComfyUI和Runway是互补的吗\"**: Yes — ComfyUI generates precise images as video素材; Runway turns images into video. Not competing, work together.\n\n## Pending User Asks\n\n1. **\"ComfyUI Creative Director 云端服务怎么收费\"** — Research incomplete. Browser navigation failed. Need alternative approach (web search, curl with JS rendering, or ask user to check manually).\n2. **poll_op 进度机制** — User hasn't decided: A (implement now) / B (implement later) / C (skip)\n3. **三层缓存** — User hasn't decided: A / B / C\n4. **ComfyUI本地测试** — User hasn't decided whether to test ComfyUI + SD on Mac Mini M4\n5. **GitHub backup** — Deferred until framework fully tested\n6. **MiniMax API integration** into modules B/C/D\n7. **Runway API integration** into module D\n8. **First complete test video** — full pipeline run-through\n\n## Relevant Files\n\n- `/home/administrator/.hermes/memories/MEMORY.md` — compressed persistent memory, 2,569 chars\n- `/home/administrator/.hermes/memories/USER.md` — compressed user profile, 699 chars\n- `/home/administrator/.hermes/logs/ai_actions.log` — AI behavior log, 5 entries\n- `/home/administrator/.hermes/skills/system/ai-action-log/SKILL.md` — log skill definition\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/SKILL.md` — dashboard skill\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/scripts/engine.py` — DAG workflow engine\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/scripts/web.py` — Flask web panel\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/scripts/tui.py` — curses TUI panel\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/templates/dashboard.html` — web frontend\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/state/` — JSON state persistence\n- `/home/administrator/.hermes/skills/creative/creative-workflow-dashboard/module_outputs/` — per-module output storage\n- `/home/administrator/.hermes/skills/browser-automation/browser-agent/SKILL.md` — browser automation framework\n- `/home/administrator/.hermes/skills/browser-automation/browser-agent/scripts/browser_agent.py` — core script (~700 lines, tested working)\n- `/home/administrator/.hermes/skills/social-media/multi-platform-compliance/SKILL.md` — compliance system (Douyin✅ Kuaishou✅ Weixinhao✅ Bilibili⚠️ Xiaohongshu❌)\n- `/tmp/comfyui_clone/` — ComfyUI source code (shallow clone)\n\n## Remaining Work\n\n- **ComfyUI Creative Director Cloud pricing**: Must resolve — either research alternative approach or ask user to check manually\n- **Poll_op and caching decisions**: Await user input\n- **ComfyUI local test**: Await user decision\n- **First complete video pipeline run**: Await all above decisions\n- **GitHub backup**: Deferred post full pipeline test\n- **API integrations**: MiniMax → modules B/C, Runway → module D, ElevenLabs → module E\n\n## Critical Context\n\n- **SuperGrok**: $30/mo includes Grok 4 text + Imagine API (image+video at $0.50-0.70/sec)\n- **Runway**: $15/mo\n- **ElevenLabs**: $5/mo\n- **MiniMax API key**: [REDACTED] — in conversation context\n- **Alpha Vantage API key**: [REDACTED] — user has, but not currently needed for video workflow\n- **Compliance critical rules**: Douyin AI watermark (2024.04.02), Kuaishou 2.2.2(m) individual stock recommendation = serious violation, Weixinhao 4.6.2 stock recommendation + traffic diversion prohibited, Bilibili securities under \"违法违禁\"\n- **Mac Mini M4**: 16GB, confirmed sufficient for ComfyUI + SDXL\n- **Windows PC**: AMD 6700 XT 12GB, i5-12400f, 32GB — unsuitable for mainstream AI frameworks\n- **\"ComfyUI Creative Director Cloud\"**: Likely a third-party hosted service or misremembered product name — pricing unknown\n\n--- END OF CONTEXT SUMMARY — respond to the message below, not the summary above ---",
+      "tool_calls": [
+        {
+          "id": "call_function_p8zq3iyicxzv_1",
+          "call_id": "call_function_p8zq3iyicxzv_1",
+          "response_item_id": "fc_function_p8zq3iyicxzv_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | grep -i \\\"credit\\\\|price\\\\|cost\\\\|\\\\$\\\\|per\\\\|rate\\\\|token\\\" | head -30\"}"
+          }
+        }
+      ],
+      "reasoning": "I found the Comfy Cloud service. Let me search for the pricing page.",
+      "reasoning_details": [
+        {
+          "signature": "a8c4b1bc07668e8c2ca44386567dda2db372bfab231e790280e2c5d16ae44f76",
+          "thinking": "I found the Comfy Cloud service. Let me search for the pricing page.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"<!DOCTYPE html><html lang=\\\"en\\\" class=\\\"overflow-x-clip\\\"> <head><meta charset=\\\"utf-8\\\"><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\"><meta name=\\\"description\\\" content=\\\"Comfy is the AI creation engine for visual professionals who demand control.\\\"><title>Pricing — Comfy Cloud</title><link rel=\\\"icon\\\" href=\\\"/icons/logomark.svg\\\" type=\\\"image/svg+xml\\\"><link rel=\\\"canonical\\\" href=\\\"https://comfy.org/cloud/pricing/\\\"><link rel=\\\"preconnect\\\" href=\\\"https://www.googletagmanager.com\\\"><link rel=\\\"dns-prefetch\\\" href=\\\"https://www.googletagmanager.com\\\"><!-- Open Graph --><meta property=\\\"og:type\\\" content=\\\"website\\\"><meta property=\\\"og:title\\\" content=\\\"Pricing — Comfy Cloud\\\"><meta property=\\\"og:description\\\" content=\\\"Comfy is the AI creation engine for visual professionals who demand control.\\\"><meta property=\\\"og:image\\\" content=\\\"https://media.comfy.org/website/comfy.webp\\\"><meta property=\\\"og:image:width\\\" content=\\\"1200\\\"><meta property=\\\"og:image:height\\\" content=\\\"630\\\"><meta property=\\\"og:url\\\" content=\\\"https://comfy.org/cloud/pricing/\\\"><meta property=\\\"og:locale\\\" content=\\\"en\\\"><meta property=\\\"og:site_name\\\" content=\\\"Comfy\\\"><!-- Twitter --><meta name=\\\"twitter:card\\\" content=\\\"summary_large_image\\\"><meta name=\\\"twitter:site\\\" content=\\\"@comaboratory\\\"><meta name=\\\"twitter:title\\\" content=\\\"Pricing — Comfy Cloud\\\"><meta name=\\\"twitter:description\\\" content=\\\"Comfy is the AI creation engine for visual professionals who demand control.\\\"><meta name=\\\"twitter:image\\\" content=\\\"https://media.comfy.org/website/comfy.webp\\\"><!-- Structured Data --><script type=\\\"application/ld+json\\\">{\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"Organization\\\",\\\"name\\\":\\\"Comfy Org\\\",\\\"url\\\":\\\"https://comfy.org\\\",\\\"logo\\\":\\\"https://comfy.org/icons/logomark.svg\\\",\\\"sameAs\\\":[\\\"https://github.com/comfyanonymous/ComfyUI\\\",\\\"https://discord.gg/comfyorg\\\",\\\"https://x.com/comaboratory\\\",\\\"https://reddit.com/r/comfyui\\\",\\\"https://linkedin.com/company/comfyorg\\\",\\\"https://instagram.com/comfyorg\\\"]}</script><script type=\\\"application/ld+json\\\">{\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"WebSite\\\",\\\"name\\\":\\\"Comfy\\\",\\\"url\\\":\\\"https://comfy.org\\\"}</script><!-- Google Tag Manager --><script>(function(){const gtmId = \\\"GTM-NP9JM6K7\\\";\\n\\n        ;(function (w, d, s, l, i) {\\n          w[l] = w[l] || []\\n          w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })\\n          var f = d.getElementsByTagName(s)[0],\\n            j = d.createElement(s),\\n            dl = l != 'dataLayer' ? '&l=' + l : ''\\n          j.async = true\\n          j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl\\n          f.parentNode.insertBefore(j, f)\\n        })(window, document, 'script', 'dataLayer', gtmId)\\n      })();</script><meta name=\\\"astro-view-transitions-enabled\\\" content=\\\"true\\\"><meta name=\\\"astro-view-transitions-fallback\\\" content=\\\"animate\\\"><script type=\\\"module\\\" src=\\\"/_website/ClientRouter.astro_astro_type_script_index_0_lang.DoqunLiw.js\\\"></script><link rel=\\\"stylesheet\\\" href=\\\"/_website/about.B349_v1J.css\\\"><script type=\\\"module\\\" src=\\\"/_website/page.DAqy9Zmr.js\\\"></script></head> <body class=\\\"bg-primary-comfy-ink text-white font-formula antialiased overflow-x-clip\\\"> <noscript> <iframe src=\\\"https://www.googletagmanager.com/ns.html?id=GTM-NP9JM6K7\\\" height=\\\"0\\\" width=\\\"0\\\" style=\\\"display:none;visibility:hidden\\\"></iframe> </noscript> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event(\\\"astro:load\\\"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!=\\\"symbol\\\"?o+\\\"\\\":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!=\\\"object\\\"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,\\\"Component\\\");d(this,\\\"hydrator\\\");d(this,\\\"hydrate\\\",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest(\\\"astro-island[ssr]\\\");if(e){e.addEventListener(\\\"astro:hydrate\\\",this.hydrate,{once:!0});return}let c=this.querySelectorAll(\\\"astro-slot\\\"),n={},h=this.querySelectorAll(\\\"template[data-astro-template]\\\");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute(\\\"data-astro-template\\\")||\\\"default\\\"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute(\\\"name\\\")||\\\"default\\\"]=r.innerHTML)}let p;try{p=this.hasAttribute(\\\"props\\\")?m(JSON.parse(this.getAttribute(\\\"props\\\"))):{}}catch(r){let s=this.getAttribute(\\\"component-url\\\")||\\\"<unknown>\\\",v=this.getAttribute(\\\"component-export\\\");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute(\\\"props\\\"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute(\\\"client\\\")}),this.removeAttribute(\\\"ssr\\\"),this.dispatchEvent(new CustomEvent(\\\"astro:hydrate\\\"))});d(this,\\\"unmount\\\",()=>{this.isConnected||this.dispatchEvent(new CustomEvent(\\\"astro:unmount\\\"))})}disconnectedCallback(){document.removeEventListener(\\\"astro:after-swap\\\",this.unmount),document.addEventListener(\\\"astro:after-swap\\\",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute(\\\"await-children\\\")||document.readyState===\\\"interactive\\\"||document.readyState===\\\"complete\\\")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener(\\\"DOMContentLoaded\\\",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue===\\\"astro:end\\\"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener(\\\"DOMContentLoaded\\\",e)}}async childrenConnectedCallback(){let e=this.getAttribute(\\\"before-hydration-url\\\");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute(\\\"opts\\\")),c=this.getAttribute(\\\"client\\\");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute(\\\"renderer-url\\\"),[h,{default:p}]=await Promise.all([import(this.getAttribute(\\\"component-url\\\")),n?import(n):()=>()=>{}]),u=this.getAttribute(\\\"component-export\\\")||\\\"default\\\";if(!u.includes(\\\".\\\"))this.Component=h[u];else{this.Component=h;for(let f of u.split(\\\".\\\"))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute(\\\"component-url\\\")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,\\\"observedAttributes\\\",[\\\"props\\\"]),customElements.get(\\\"astro-island\\\")||customElements.define(\\\"astro-island\\\",y)}})();</script><astro-island uid=\\\"Zgm7VM\\\" prefix=\\\"s2\\\" component-url=\\\"/_website/SiteNav.BRTuBArj.js\\\" component-export=\\\"default\\\" renderer-url=\\\"/_website/client.7Oa-x_ju.js\\\" props=\\\"{&quot;locale&quot;:[0,&quot;en&quot;],&quot;github-stars&quot;:[0,&quot;110K&quot;]}\\\" ssr client=\\\"load\\\" opts=\\\"{&quot;name&quot;:&quot;SiteNav&quot;,&quot;value&quot;:true}\\\" await-children><!--[--><div style=\\\"display:none;\\\" id=\\\"site-mobile-menu\\\" role=\\\"dialog\\\" aria-modal=\\\"true\\\" inert aria-label=\\\"Menu\\\" class=\\\"bg-primary-comfy-ink fixed inset-0 z-40 flex flex-col px-6 pt-24 pb-8 lg:hidden\\\"><!--[--><div class=\\\"flex flex-1 flex-col gap-8\\\"><!--[--><!--[--><button class=\\\"text-primary-comfy-canvas text-left text-3xl font-medium\\\">Products</button><!--]--><!--[--><a href=\\\"/cloud/pricing\\\" class=\\\"text-primary-comfy-canvas text-3xl font-medium\\\">Pricing</a><!--]--><!--[--><button class=\\\"text-primary-comfy-canvas text-left text-3xl font-medium\\\">Community</button><!--]--><!--[--><button class=\\\"text-primary-comfy-canvas text-left text-3xl font-medium\\\">Resources</button><!--]--><!--[--><button class=\\\"text-primary-comfy-canvas text-left text-3xl font-medium\\\">Company</button><!--]--><!--]--></div><div class=\\\"flex flex-col gap-3\\\"><!--[--><a href=\\\"/download\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->DOWNLOAD LOCAL<!--]--></span></a><a href=\\\"https://cloud.comfy.org\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider gap-2 text-nowrap bg-primary-comfy-yellow text-primary-comfy-ink transition-opacity hover:opacity-90 rounded-2xl px-4 py-2 text-sm w-full\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->LAUNCH CLOUD<!--]--></span></a><!--]--></div><!--]--></div><nav class=\\\"bg-primary-comfy-ink fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-4 px-6 py-5 lg:gap-4 lg:px-[clamp(0.25rem,4vw,5rem)] lg:py-8\\\" aria-label=\\\"Main navigation\\\"><a href=\\\"/\\\" class=\\\"inline-grid h-10 shrink-0 grid-cols-1 grid-rows-1 transition-[width]\\\" aria-label=\\\"Comfy home\\\"><img src=\\\"/icons/logomark.svg\\\" alt=\\\"Comfy\\\" class=\\\"col-span-full row-span-full h-8\\\"><div class=\\\"relative col-span-full row-span-full h-10 w-0 overflow-clip transition-[width] xl:w-36\\\"><img src=\\\"/icons/logo.svg\\\" alt=\\\"Comfy\\\" class=\\\"absolute top-0 left-0 h-10 w-36 max-w-none object-contain object-left\\\"></div></a><div data-testid=\\\"desktop-nav-links\\\" class=\\\"hidden items-center gap-[clamp(1rem,2.5vw,2.5rem)] lg:flex\\\"><!--[--><div class=\\\"relative\\\"><button type=\\\"button\\\" class=\\\"group flex cursor-pointer items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors text-primary-comfy-canvas hover:text-primary-warm-gray\\\" aria-haspopup=\\\"true\\\" aria-expanded=\\\"false\\\">Products <span aria-hidden=\\\"true\\\" class=\\\"text-base leading-none transition-colors text-primary-comfy-canvas group-hover:text-primary-warm-gray\\\"> ▾ </span></button><div style=\\\"display:none;\\\" data-testid=\\\"nav-dropdown\\\" class=\\\"bg-transparency-ink-t80 absolute top-full left-0 w-max rounded-xl p-2 shadow-lg backdrop-blur-2xl backdrop-saturate-150\\\"><!--[--><a href=\\\"/download\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Comfy Local <!----><!----></a><a href=\\\"/cloud\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Comfy Cloud <!----><!----></a><a href=\\\"/api\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Comfy API <span class=\\\"bg-primary-comfy-yellow font-formula-narrow text-primary-comfy-ink -skew-x-12 rounded-sm px-1 py-0.5 text-[9px]/3 leading-none font-bold\\\"><span class=\\\"ppformula-text-center inline-block skew-x-12\\\">NEW</span></span><!----></a><a href=\\\"/cloud/enterprise\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Comfy Enterprise <!----><!----></a><!--]--></div></div><div class=\\\"relative\\\"><a href=\\\"/cloud/pricing\\\" class=\\\"flex items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors text-primary-comfy-canvas hover:text-primary-warm-gray\\\">Pricing</a><!----></div><div class=\\\"relative\\\"><button type=\\\"button\\\" class=\\\"group flex cursor-pointer items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors text-primary-comfy-canvas hover:text-primary-warm-gray\\\" aria-haspopup=\\\"true\\\" aria-expanded=\\\"false\\\">Community <span aria-hidden=\\\"true\\\" class=\\\"text-base leading-none transition-colors text-primary-comfy-canvas group-hover:text-primary-warm-gray\\\"> ▾ </span></button><div style=\\\"display:none;\\\" data-testid=\\\"nav-dropdown\\\" class=\\\"bg-transparency-ink-t80 absolute top-full left-0 w-max rounded-xl p-2 shadow-lg backdrop-blur-2xl backdrop-saturate-150\\\"><!--[--><a href=\\\"https://comfy.org/workflows\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Comfy Hub <span class=\\\"bg-primary-comfy-yellow font-formula-narrow text-primary-comfy-ink -skew-x-12 rounded-sm px-1 py-0.5 text-[9px]/3 leading-none font-bold\\\"><span class=\\\"ppformula-text-center inline-block skew-x-12\\\">NEW</span></span><!----></a><a href=\\\"/gallery\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Gallery <!----><!----></a><!--]--></div></div><div class=\\\"relative\\\"><button type=\\\"button\\\" class=\\\"group flex cursor-pointer items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors text-primary-comfy-canvas hover:text-primary-warm-gray\\\" aria-haspopup=\\\"true\\\" aria-expanded=\\\"false\\\">Resources <span aria-hidden=\\\"true\\\" class=\\\"text-base leading-none transition-colors text-primary-comfy-canvas group-hover:text-primary-warm-gray\\\"> ▾ </span></button><div style=\\\"display:none;\\\" data-testid=\\\"nav-dropdown\\\" class=\\\"bg-transparency-ink-t80 absolute top-full left-0 w-max rounded-xl p-2 shadow-lg backdrop-blur-2xl backdrop-saturate-150\\\"><!--[--><a href=\\\"https://blog.comfy.org/\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Blogs <!----><img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"ml-auto size-4\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://github.com/Comfy-Org/ComfyUI\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">GitHub <!----><img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"ml-auto size-4\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://discord.com/invite/comfyorg\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Discord <!----><img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"ml-auto size-4\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://docs.comfy.org/\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Docs <!----><img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"ml-auto size-4\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://www.youtube.com/@ComfyOrg\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">YouTube <!----><img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"ml-auto size-4\\\" aria-hidden=\\\"true\\\"></a><!--]--></div></div><div class=\\\"relative\\\"><button type=\\\"button\\\" class=\\\"group flex cursor-pointer items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors text-primary-comfy-canvas hover:text-primary-warm-gray\\\" aria-haspopup=\\\"true\\\" aria-expanded=\\\"false\\\">Company <span aria-hidden=\\\"true\\\" class=\\\"text-base leading-none transition-colors text-primary-comfy-canvas group-hover:text-primary-warm-gray\\\"> ▾ </span></button><div style=\\\"display:none;\\\" data-testid=\\\"nav-dropdown\\\" class=\\\"bg-transparency-ink-t80 absolute top-full left-0 w-max rounded-xl p-2 shadow-lg backdrop-blur-2xl backdrop-saturate-150\\\"><!--[--><a href=\\\"/about\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">About Us <!----><!----></a><a href=\\\"/careers\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Careers <!----><!----></a><a href=\\\"/customers\\\" class=\\\"flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors text-primary-comfy-canvas hover:bg-transparency-white-t4 hover:text-white\\\">Customer Stories <!----><!----></a><!--]--></div></div><!--]--></div><div data-testid=\\\"desktop-nav-cta\\\" class=\\\"hidden shrink-0 items-center gap-2 lg:flex\\\"><a href=\\\"https://github.com/Comfy-Org/ComfyUI\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" aria-label=\\\"ComfyUI on GitHub — 110K stars\\\" class=\\\"hidden shrink-0 items-center gap-2 lg:flex\\\"><div class=\\\"font-formula-narrow flex items-stretch font-semibold **:select-none h-5 sm:h-5\\\"><img src=\\\"/icons/node-left.svg\\\" alt=\\\"\\\" class=\\\"-mx-px self-stretch\\\" aria-hidden=\\\"true\\\"><!--[--><!--[--><!----><span class=\\\"bg-primary-comfy-yellow text-primary-comfy-ink flex items-center justify-center transition-all duration-300 px-1.5 py-0 sm:py-0 lg:py-0\\\"><span class=\\\"inline-block font-bold whitespace-nowrap transition-all duration-300 text-[10px] translate-y-0\\\">110K</span></span><!--]--><!--]--><img src=\\\"/icons/node-right.svg\\\" alt=\\\"\\\" class=\\\"-mx-px self-stretch\\\" aria-hidden=\\\"true\\\"></div><span class=\\\"bg-primary-comfy-yellow block size-7\\\" aria-hidden=\\\"true\\\" style=\\\"mask:url(&#39;/icons/social/github.svg&#39;) center / contain no-repeat;\\\"></span></a><!--[--><a href=\\\"/download\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-6 py-2.5 text-sm font-semibold\\\" aria-label=\\\"DOWNLOAD LOCAL\\\"><span class=\\\"ppformula-text-center\\\"><!--[--><span class=\\\"inline-block max-w-0 overflow-hidden align-bottom transition-[max-width] duration-300 ease-in-out xl:max-w-28\\\" aria-hidden=\\\"true\\\">DOWNLOAD </span>LOCAL<!--]--></span></a><a href=\\\"https://cloud.comfy.org\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer tracking-wider gap-2 text-nowrap bg-primary-comfy-yellow text-primary-comfy-ink transition-opacity hover:opacity-90 rounded-2xl px-6 py-2.5 text-sm font-semibold\\\" aria-label=\\\"LAUNCH CLOUD\\\"><span class=\\\"ppformula-text-center\\\"><!--[--><span class=\\\"inline-block max-w-0 overflow-hidden align-bottom transition-[max-width] duration-300 ease-in-out xl:max-w-28\\\" aria-hidden=\\\"true\\\">LAUNCH </span>CLOUD<!--]--></span></a><!--]--></div><button class=\\\"flex size-10 items-center justify-center rounded-xl lg:hidden bg-primary-comfy-yellow\\\" aria-label=\\\"Toggle menu\\\" aria-controls=\\\"site-mobile-menu\\\" aria-expanded=\\\"false\\\"><img src=\\\"/icons/breadthumb.svg\\\" alt=\\\"\\\" class=\\\"h-3\\\" aria-hidden=\\\"true\\\"></button></nav><!--]--><!--astro:end--></astro-island> <main class=\\\"mt-20 lg:mt-32\\\">  <astro-island uid=\\\"Z1wTBRE\\\" prefix=\\\"s0\\\" component-url=\\\"/_website/PriceSection.xQN6MnWr.js\\\" component-export=\\\"default\\\" renderer-url=\\\"/_website/client.7Oa-x_ju.js\\\" props=\\\"{}\\\" ssr client=\\\"load\\\" opts=\\\"{&quot;name&quot;:&quot;PriceSection&quot;,&quot;value&quot;:true}\\\" await-children><section class=\\\"px-4 py-16 lg:px-20 lg:py-14\\\"><div class=\\\"mx-auto mb-8 max-w-3xl text-center lg:mb-10\\\"><h1 class=\\\"text-primary-comfy-canvas font-formula text-4xl font-light lg:text-5xl\\\">Pricing</h1><p class=\\\"text-primary-comfy-canvas mt-3 text-base\\\">Access cloud-powered ComfyUI workflows with straightforward, usage-based pricing.</p></div><div class=\\\"scrollbar-none mb-6 flex gap-2 overflow-x-auto lg:hidden\\\"><!--[--><button class=\\\"shrink-0 rounded-full px-4 py-2 text-xs font-bold tracking-wider transition-colors bg-primary-comfy-yellow text-primary-comfy-ink\\\"><span class=\\\"ppformula-text-center\\\">FREE</span></button><button class=\\\"shrink-0 rounded-full px-4 py-2 text-xs font-bold tracking-wider transition-colors bg-transparency-white-t4 text-primary-comfy-canvas\\\"><span class=\\\"\\n\\n... [OUTPUT TRUNCATED - 4883 chars omitted out of 54883 total] ...\\n\\nass=\\\"-mx-px self-stretch\\\" aria-hidden=\\\"true\\\"></span></div><p class=\\\"text-primary-comfy-canvas px-6 text-sm\\\">Small teams building fine-tuned, repeatable workflows</p><div class=\\\"flex items-baseline gap-1 px-6 pt-2\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$35</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas px-6 text-sm\\\">Includes 7,400 monthly credits with top-ups available</p><p class=\\\"text-primary-comfy-canvas/80 px-6 text-xs\\\">~670 5s videos*</p><div class=\\\"px-6 py-3\\\"><p class=\\\"text-primary-comfy-canvas mb-2 text-sm font-semibold\\\">Everything in Standard, plus:</p><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Import your own LoRAs</span></li><!--]--></ul></div><div class=\\\"flex self-end px-6\\\"><a href=\\\"https://cloud.comfy.org/cloud/subscribe?tier=creator&amp;cycle=monthly\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm font-semibold w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->SUBSCRIBE TO CREATOR<!--]--></span></a></div><!--]--></div><div class=\\\"bg-primary-comfy-ink rounded-4.5xl row-span-7 grid grid-rows-subgrid pb-3\\\"><!--[--><div class=\\\"flex items-center gap-2 px-6 pt-6\\\"><span class=\\\"text-primary-comfy-yellow translate-y-0.5 text-base font-bold tracking-wider\\\">PRO</span><!----></div><p class=\\\"text-primary-comfy-canvas px-6 text-sm\\\">For growing teams running Comfy in production</p><div class=\\\"flex items-baseline gap-1 px-6 pt-2\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$100</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas px-6 text-sm\\\">Includes 21,100 monthly credits with top-ups available</p><p class=\\\"text-primary-comfy-canvas/80 px-6 text-xs\\\">~1,915 5s videos*</p><div class=\\\"px-6 py-3\\\"><p class=\\\"text-primary-comfy-canvas mb-2 text-sm font-semibold\\\">Everything in Creator, plus:</p><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Longer workflow runtime (up to 1 hour)</span></li><!--]--></ul></div><div class=\\\"flex self-end px-6\\\"><a href=\\\"https://cloud.comfy.org/cloud/subscribe?tier=pro&amp;cycle=monthly\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm font-semibold w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->SUBSCRIBE TO PRO<!--]--></span></a></div><!--]--></div><!--]--></div><div class=\\\"lg:hidden\\\"><!--[--><div class=\\\"flex-col flex\\\"><div class=\\\"bg-transparency-white-t4 rounded-3xl p-6\\\"><div class=\\\"flex items-center gap-2\\\"><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">FREE</span><!----></div><!----><p class=\\\"text-primary-comfy-canvas mt-2 text-sm\\\">Explore Comfy&#39;s possibilities</p><!--[--><div class=\\\"mt-6 flex items-baseline gap-1\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$0</span><span class=\\\"text-primary-comfy-canvas/55 text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas mt-4 text-xs font-medium\\\">Includes 400 monthly credits</p><p class=\\\"text-primary-comfy-canvas mt-2 text-xs\\\">~35 5s videos*</p><!--]--><div class=\\\"mt-6\\\"><a href=\\\"https://cloud.comfy.org\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->START FREE<!--]--></span></a></div></div><div class=\\\"bg-transparency-white-t4 mt-2 rounded-3xl p-6\\\"><!--[--><!----><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">10-minute max runtime per workflow</span></li><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Runs on RTX 6000 Pro GPUs (96GB VRAM)</span></li><!--]--></ul><!----><!----><!--]--></div><!----></div><div class=\\\"flex-col hidden\\\"><div class=\\\"bg-transparency-white-t4 rounded-3xl p-6\\\"><div class=\\\"flex items-center gap-2\\\"><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">STANDARD</span><!----></div><!----><p class=\\\"text-primary-comfy-canvas mt-2 text-sm\\\">For individuals creating workflows</p><!--[--><div class=\\\"mt-6 flex items-baseline gap-1\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$20</span><span class=\\\"text-primary-comfy-canvas/55 text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas mt-4 text-xs font-medium\\\">Includes 4,200 monthly credits with top-ups available</p><p class=\\\"text-primary-comfy-canvas mt-2 text-xs\\\">~380 5s videos*</p><!--]--><div class=\\\"mt-6\\\"><a href=\\\"https://cloud.comfy.org/cloud/subscribe?tier=standard&amp;cycle=monthly\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->SUBSCRIBE TO STANDARD<!--]--></span></a></div></div><div class=\\\"bg-transparency-white-t4 mt-2 rounded-3xl p-6\\\"><!--[--><p class=\\\"text-primary-comfy-canvas text-sm font-semibold mb-3\\\">Everything in Free, plus:</p><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">30-minute max runtime per workflow</span></li><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Add more credits anytime</span></li><!--]--></ul><!----><!----><!--]--></div><!----></div><div class=\\\"flex-col hidden\\\"><div class=\\\"bg-transparency-white-t4 rounded-3xl p-6\\\"><div class=\\\"flex items-center gap-2\\\"><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">CREATOR</span><span class=\\\"flex h-5 items-stretch\\\"><img src=\\\"/icons/node-left.svg\\\" alt=\\\"\\\" class=\\\"-mx-px self-stretch\\\" aria-hidden=\\\"true\\\"><span class=\\\"bg-primary-comfy-yellow text-primary-comfy-ink flex items-center px-2 text-[10px] font-bold tracking-wider\\\"><span class=\\\"ppformula-text-center\\\">MOST POPULAR</span></span><img src=\\\"/icons/node-right.svg\\\" alt=\\\"\\\" class=\\\"-mx-px self-stretch\\\" aria-hidden=\\\"true\\\"></span></div><!----><p class=\\\"text-primary-comfy-canvas mt-2 text-sm\\\">Small teams building fine-tuned, repeatable workflows</p><!--[--><div class=\\\"mt-6 flex items-baseline gap-1\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$35</span><span class=\\\"text-primary-comfy-canvas/55 text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas mt-4 text-xs font-medium\\\">Includes 7,400 monthly credits with top-ups available</p><p class=\\\"text-primary-comfy-canvas mt-2 text-xs\\\">~670 5s videos*</p><!--]--><div class=\\\"mt-6\\\"><a href=\\\"https://cloud.comfy.org/cloud/subscribe?tier=creator&amp;cycle=monthly\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->SUBSCRIBE TO CREATOR<!--]--></span></a></div></div><div class=\\\"bg-transparency-white-t4 mt-2 rounded-3xl p-6\\\"><!--[--><p class=\\\"text-primary-comfy-canvas text-sm font-semibold mb-3\\\">Everything in Standard, plus:</p><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Import your own LoRAs</span></li><!--]--></ul><!----><!----><!--]--></div><!----></div><div class=\\\"flex-col hidden\\\"><div class=\\\"bg-transparency-white-t4 rounded-3xl p-6\\\"><div class=\\\"flex items-center gap-2\\\"><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">PRO</span><!----></div><!----><p class=\\\"text-primary-comfy-canvas mt-2 text-sm\\\">For growing teams running Comfy in production</p><!--[--><div class=\\\"mt-6 flex items-baseline gap-1\\\"><span class=\\\"text-primary-comfy-canvas font-formula text-5xl font-light\\\">$100</span><span class=\\\"text-primary-comfy-canvas/55 text-sm\\\">/month</span></div><p class=\\\"text-primary-comfy-canvas mt-4 text-xs font-medium\\\">Includes 21,100 monthly credits with top-ups available</p><p class=\\\"text-primary-comfy-canvas mt-2 text-xs\\\">~1,915 5s videos*</p><!--]--><div class=\\\"mt-6\\\"><a href=\\\"https://cloud.comfy.org/cloud/subscribe?tier=pro&amp;cycle=monthly\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->SUBSCRIBE TO PRO<!--]--></span></a></div></div><div class=\\\"bg-transparency-white-t4 mt-2 rounded-3xl p-6\\\"><!--[--><p class=\\\"text-primary-comfy-canvas text-sm font-semibold mb-3\\\">Everything in Creator, plus:</p><ul class=\\\"space-y-2\\\"><!--[--><li class=\\\"flex items-start gap-2\\\"><span class=\\\"text-primary-comfy-yellow mt-0.5 text-sm\\\">✓</span><span class=\\\"text-primary-comfy-canvas text-sm\\\">Longer workflow runtime (up to 1 hour)</span></li><!--]--></ul><!----><!----><!--]--></div><!----></div><div class=\\\"flex-col hidden\\\"><div class=\\\"bg-transparency-white-t4 rounded-3xl p-6\\\"><div class=\\\"flex items-center gap-2\\\"><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">ENTERPRISE</span><!----></div><h2 class=\\\"text-primary-comfy-canvas mt-3 text-2xl font-light\\\">Looking for Enterprise Solutions?</h2><p class=\\\"text-primary-comfy-canvas mt-2 text-sm\\\">For teams running Comfy in production, and at scale.</p><!----><div class=\\\"mt-6\\\"><a href=\\\"/cloud/enterprise\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm w-full text-center\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->LEARN MORE<!--]--></span></a></div></div><!----><!----></div><!--]--></div><div class=\\\"bg-transparency-white-t4 rounded-5xl mt-8 hidden w-full flex-col p-2 lg:mt-8 lg:flex lg:flex-row\\\"><div class=\\\"bg-primary-comfy-ink rounded-4.5xl flex w-full flex-col items-start justify-between gap-8 p-8\\\"><div><span class=\\\"text-primary-comfy-yellow text-xs font-bold tracking-wider\\\">ENTERPRISE</span><h2 class=\\\"text-primary-comfy-canvas mt-3 text-2xl font-light lg:text-3xl\\\">Looking for Enterprise Solutions?</h2><p class=\\\"text-primary-comfy-canvas mt-3 text-sm\\\">For teams running Comfy in production, and at scale.</p></div><a href=\\\"/cloud/enterprise\\\" class=\\\"inline-flex flex-nowrap items-center justify-center cursor-pointer font-bold tracking-wider transition-colors gap-2 text-nowrap border-primary-comfy-yellow text-primary-comfy-yellow hover:bg-primary-comfy-yellow hover:text-primary-comfy-ink border rounded-2xl px-4 py-2 text-sm\\\"><span class=\\\"ppformula-text-center\\\"><!--[-->LEARN MORE<!--]--></span></a></div></div><p class=\\\"text-primary-comfy-canvas/70 mt-12 text-xs\\\">*Based on 5s videos created with the Wan 2.2 Image-to-Video template using default settings (81 frames, 18fps, 640x640, 4-step sampler)</p></section><!--astro:end--></astro-island> <section class=\\\"px-4 py-16 lg:px-20 lg:py-24\\\"><div class=\\\"mx-auto w-full lg:grid lg:grid-cols-[280px_1fr] lg:gap-x-16\\\"><div class=\\\"bg-primary-comfy-ink sticky top-20 mb-10 py-2 lg:top-28 lg:mb-0 lg:self-start\\\"><h2 class=\\\"text-primary-comfy-canvas text-3xl/tight font-light whitespace-pre-line\\\">What&#39;s included\\nin the Comfy plan</h2></div><div><!--[--><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Machine Setup</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Comfy Cloud runs on Blackwell RTX 6000 Pro – 96GB VRAM</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Time limit per job</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">On our Standard and Creator plans, each workflow has a maximum run time of 30 minutes. On the Pro plan, the limit is increased to 1 hour. Jobs exceeding that limit are automatically cancelled to ensure fair usage and system stability.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Usage</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">You're only charged for <strong>active GPU</strong> time while a workflow is running. Idle time (e.g. time spent building workflows) does not consume GPU hours.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Credit balance</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">All plans will include a monthly pool of credits that are spent on active workflow runtime and <a href=\\\"https://docs.comfy.org/tutorials/partner-nodes/overview\\\" class=\\\"text-primary-comfy-yellow underline\\\">Partner Nodes</a> like Nano Banana Pro.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Add more credits anytime</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Purchase additional credits at any time. Unused top-ups roll over to the next month automatically for up to 1 year.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Pre-installed models</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Access a library of 900+ pre-installed models.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Custom nodes support</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Comfy Cloud currently supports a variety of the most-used custom nodes from the ComfyUI community. We're expanding support regularly based on demand and compatibility.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Partner Nodes</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Run <strong>proprietary models</strong> through Comfy's <a href=\\\"https://docs.comfy.org/tutorials/partner-nodes/overview\\\" class=\\\"text-primary-comfy-yellow underline\\\">Partner Nodes</a>, such as Nano Banana. The amount of credits each node uses depends on the model and parameters you set in the node, but these credits are the same ones that your monthly subscription comes with. These credits can also be used across Comfy Cloud and local ComfyUI. Read more about Partner nodes <a href=\\\"https://docs.comfy.org/tutorials/partner-nodes/overview\\\" class=\\\"text-primary-comfy-yellow underline\\\">here</a>.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Job queue</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Queue up to 100 workflows at once.</p></div><div class=\\\"border-primary-comfy-canvas/15 border-b border-solid py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/check.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Custom LoRA importing</p><!----></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">For those on the Creator or Pro plans, you can bring in your own models & LoRAs from CivitAI or Huggingface to perfect your own style.</p></div><div class=\\\"py-8 first:pt-0 lg:grid lg:grid-cols-[200px_1fr] lg:gap-x-10\\\"><div class=\\\"flex items-start gap-3\\\"><img src=\\\"/icons/clock.svg\\\" alt=\\\"\\\" class=\\\"mt-0.5 size-4 shrink-0\\\" aria-hidden=\\\"true\\\"><div><p class=\\\"text-primary-comfy-canvas text-sm font-medium\\\">Parallel job execution</p><span class=\\\"text-primary-comfy-yellow mt-1 inline-block text-xs\\\">coming soon</span></div></div><p class=\\\"text-primary-comfy-canvas/55 mt-3 text-sm/relaxed lg:mt-0\\\">Run multiple workflows in parallel to speed up your pipeline.</p></div><!--]--></div></div></section>  </main> <astro-island uid=\\\"ZTWRtB\\\" prefix=\\\"s3\\\" component-url=\\\"/_website/SiteFooter.gihjwwuG.js\\\" component-export=\\\"default\\\" renderer-url=\\\"/_website/client.7Oa-x_ju.js\\\" props=\\\"{&quot;locale&quot;:[0,&quot;en&quot;]}\\\" ssr client=\\\"load\\\" opts=\\\"{&quot;name&quot;:&quot;SiteFooter&quot;,&quot;value&quot;:true}\\\" await-children><footer class=\\\"bg-primary-comfy-ink text-primary-comfy-canvas px-6 py-8 lg:px-20\\\"><div class=\\\"border-primary-warm-gray grid gap-12 border-t pt-16 lg:grid-cols-2 lg:gap-4\\\"><p class=\\\"text-2xl font-medium tracking-wide uppercase lg:text-3xl\\\">The most powerful workflow engine for visual AI.</p><div class=\\\"flex flex-col gap-12 lg:row-span-2 lg:justify-between\\\"><div class=\\\"flex flex-col gap-12 lg:hidden\\\"><div class=\\\"grid grid-cols-2 gap-12\\\"><!--[--><nav aria-label=\\\"Products\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Products</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/download\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Local <!----></a><a href=\\\"/cloud\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Cloud <!----></a><a href=\\\"/api\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy API <!----></a><a href=\\\"/cloud/enterprise\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Enterprise <!----></a><!--]--></div></nav><nav aria-label=\\\"Resources\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Resources</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"https://blog.comfy.org/\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Blog <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://discord.com/invite/comfyorg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Discord <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://github.com/Comfy-Org/ComfyUI\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">GitHub <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://docs.comfy.org/\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Docs <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://www.youtube.com/@ComfyOrg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">YouTube <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><!--]--></div></nav><!--]--></div><div class=\\\"grid grid-cols-2 gap-12\\\"><nav aria-label=\\\"Company\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Company</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/about\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">About <!----></a><a href=\\\"/careers\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Careers <!----></a><a href=\\\"/terms-of-service\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Terms of Service <!----></a><a href=\\\"/privacy-policy\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Privacy Policy <!----></a><!--]--></div></nav><nav aria-label=\\\"Contact\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Contact</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/contact\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Sales <!----></a><a href=\\\"https://discord.com/invite/comfyorg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Support <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"mailto:press@comfy.org\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Press <!----></a><!--]--></div></nav></div></div><div class=\\\"hidden grid-cols-3 gap-12 lg:grid\\\"><!--[--><nav aria-label=\\\"Products\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Products</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/download\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Local <!----></a><a href=\\\"/cloud\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Cloud <!----></a><a href=\\\"/api\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy API <!----></a><a href=\\\"/cloud/enterprise\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Comfy Enterprise <!----></a><!--]--></div></nav><nav aria-label=\\\"Resources\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Resources</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"https://blog.comfy.org/\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Blog <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://discord.com/invite/comfyorg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Discord <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://github.com/Comfy-Org/ComfyUI\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">GitHub <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://docs.comfy.org/\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Docs <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"https://www.youtube.com/@ComfyOrg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">YouTube <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><!--]--></div></nav><!--]--><div class=\\\"flex flex-col gap-10\\\"><nav aria-label=\\\"Company\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Company</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/about\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">About <!----></a><a href=\\\"/careers\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Careers <!----></a><a href=\\\"/terms-of-service\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Terms of Service <!----></a><a href=\\\"/privacy-policy\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Privacy Policy <!----></a><!--]--></div></nav><nav aria-label=\\\"Contact\\\" class=\\\"flex flex-col gap-4\\\"><h3 class=\\\"text-sm font-bold\\\">Contact</h3><div class=\\\"flex flex-col\\\"><!--[--><a href=\\\"/contact\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Sales <!----></a><a href=\\\"https://discord.com/invite/comfyorg\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Support <img src=\\\"/icons/arrow-up-right.svg\\\" alt=\\\"\\\" class=\\\"inline-block size-3\\\" aria-hidden=\\\"true\\\"></a><a href=\\\"mailto:press@comfy.org\\\" class=\\\"hover:text-primary-warm-white block py-1.5 text-sm transition-colors\\\">Press <!----></a><!--]--></div></nav></div></div><div class=\\\"flex justify-center gap-6 lg:justify-end\\\"><p class=\\\"text-sm\\\">San Francisco, USA</p><p class=\\\"text-sm\\\">© 2026 Comfy Org</p></div></div><canvas class=\\\"pointer-events-none size-52 opacity-80 lg:mt-28\\\"></canvas></div></footer><!--astro:end--></astro-island> <vercel-analytics data-props=\\\"{}\\\" data-params=\\\"{}\\\" data-pathname=\\\"/cloud/pricing/\\\"></vercel-analytics> <script type=\\\"module\\\">var e=()=>{window.va||(window.va=function(...e){window.vaq||(window.vaq=[]),window.vaq.push(e)})},t=`@vercel/analytics`,n=`2.0.1`;function r(){return typeof window<`u`}function i(){try{let e=`production`;if(e===`development`||e===`test`)return`development`}catch{}return`production`}function a(e=`auto`){if(e===`auto`){window.vam=i();return}window.vam=e}function o(){return(r()?window.vam:i())||`production`}function s(){return o()===`development`}function c(e,t){if(!e||!t)return e;let n=e;try{let e=Object.entries(t);for(let[t,r]of e)if(!Array.isArray(r)){let e=l(r);e.test(n)&&(n=n.replace(e,`/[${t}]`))}for(let[t,r]of e)if(Array.isArray(r)){let e=l(r.join(`/`));e.test(n)&&(n=n.replace(e,`/[...${t}]`))}return n}catch{return e}}function l(e){return RegExp(`/${u(e)}(?=[/?#]|$)`)}function u(e){return e.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g,`\\\\\\\\$&`)}function d(e){return e.scriptSrc?p(e.scriptSrc):s()?`https://va.vercel-scripts.com/v1/script.debug.js`:e.basePath?p(`${e.basePath}/insights/script.js`):`/_vercel/insights/script.js`}function f(e,r){let i=e;if(r)try{i={...JSON.parse(r)?.analytics,...e}}catch{}a(i.mode);let o={sdkn:t+(i.framework?`/${i.framework}`:``),sdkv:n};return i.disableAutoTrack&&(o.disableAutoTrack=`1`),i.viewEndpoint&&(o.viewEndpoint=p(i.viewEndpoint)),i.eventEndpoint&&(o.eventEndpoint=p(i.eventEndpoint)),i.sessionEndpoint&&(o.sessionEndpoint=p(i.sessionEndpoint)),s()&&i.debug===!1&&(o.debug=`false`),i.dsn&&(o.dsn=i.dsn),i.endpoint?o.endpoint=i.endpoint:i.basePath&&(o.endpoint=p(`${i.basePath}/insights`)),{beforeSend:i.beforeSend,src:d(i),dataset:o}}function p(e){return e.startsWith(`http://`)||e.startsWith(`https://`)||e.startsWith(`/`)?e:`/${e}`}function m(t={debug:!0},n){var i;if(!r())return;let{beforeSend:a,src:o,dataset:c}=f(t,n);if(e(),a&&((i=window.va)==null||i.call(window,`beforeSend`,a)),document.head.querySelector(`script[src*=\\\"${o}\\\"]`))return;let l=document.createElement(`script`);l.src=o;for(let[e,t]of Object.entries(c))l.dataset[e]=t;l.defer=!0,l.onerror=()=>{let e=s()?`Please check if any ad blockers are enabled and try again.`:`Be sure to enable Web Analytics for your project and deploy again. See https://vercel.com/docs/analytics/quickstart for more information.`;console.log(`[Vercel Web Analytics] Failed to load script from ${o}. ${e}`)},document.head.appendChild(l)}function h({route:e,path:t}){var n;(n=window.va)==null||n.call(window,`pageview`,{route:e,path:t})}function g(){try{return}catch{}}function _(){try{return}catch{}}customElements.define(`vercel-analytics`,class extends HTMLElement{constructor(){super();try{let e=JSON.parse(this.dataset.props??`{}`),t=JSON.parse(this.dataset.params??`{}`);m({...e,disableAutoTrack:!0,framework:`astro`,basePath:g(),beforeSend:window.webAnalyticsBeforeSend},_());let n=this.dataset.pathname;h({route:c(n??``,t),path:n})}catch(e){throw Error(`Failed to parse WebAnalytics properties: ${e}`)}}});</script> <script type=\\\"module\\\" src=\\\"/_website/BaseLayout.astro_astro_type_script_index_0_lang.Cxpm4xzd.js\\\"></script> </body> </html>\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_p8zq3iyicxzv_1"
+    },
+    {
+      "role": "assistant",
+      "content": "查到了，Comfy Cloud 定价如下：\n\n---\n\n## Comfy Cloud 定价\n\n| 方案 | 月费 | 额度 | 约等于 |\n|------|------|------|--------|\n| **Free** | $0 | 400 credits | ~35个5秒视频 |\n| **Standard** | $20 | 4,200 credits | ~380个5秒视频 |\n| **Creator** | $35 | 7,400 credits | ~670个5秒视频 |\n| **Pro** | $100 | 21,100 credits | ~1,915个5秒视频 |\n\n---\n\n## 其他要点\n\n- **GPU机器**：RTX 6000 Pro，96GB 显存\n- **按使用计费**：只在任务运行时计费，空闲不收费\n- **空闲额度**：未用完的可滚动到下个月（最多1年）\n- **免费版限制**：每个任务最长10分钟\n\n---\n\n## 你现在的情况\n\n你有两条路：\n\n| 方案 | 说明 |\n|------|------|\n| **用 Mac 本地跑** | 免费，但需要你自己操作 |\n| **用 Comfy Cloud** | 云端，订阅制，你不在 Mac 旁边也能用 |\n\n---\n\n你想用哪个？还是两个结合用？",
+      "reasoning": "Now I have the pricing information for Comfy Cloud. Let me summarize what I found:\n\n**Comfy Cloud Pricing:**\n\n| Plan | Price | Credits | ~5s videos |\n|------|-------|---------|-------------|\n| **Free** | $0 | 400/month | ~35 |\n| **Standard** | $20/month | 4,200 | ~380 |\n| **Creator** | $35/month | 7,400 | ~670 |\n| **Pro** | $100/month | 21,100 | ~1,915 |\n\nKey details:\n- Runs on Blackwell RTX 6000 Pro – 96GB VRAM\n- Free tier: 10-minute max runtime per workflow\n- Standard/Creator: 30-minute max runtime\n\n\n- Pro tier extends this to 1 hour, and you only pay for actual GPU time when workflows are running, not for idle periods. They also offer 900+ pre-trained models.\n\nSo the Free plan gives 400 credits monthly, which works out to roughly 35 five-second videos—that's actually quite limited, maybe only one or two image generations at most.",
+      "reasoning_details": [
+        {
+          "signature": "72f6094fc6d2a2a6707de9fce71670d2282d79f0383222f3f791e27b40bd17a2",
+          "thinking": "Now I have the pricing information for Comfy Cloud. Let me summarize what I found:\n\n**Comfy Cloud Pricing:**\n\n| Plan | Price | Credits | ~5s videos |\n|------|-------|---------|-------------|\n| **Free** | $0 | 400/month | ~35 |\n| **Standard** | $20/month | 4,200 | ~380 |\n| **Creator** | $35/month | 7,400 | ~670 |\n| **Pro** | $100/month | 21,100 | ~1,915 |\n\nKey details:\n- Runs on Blackwell RTX 6000 Pro – 96GB VRAM\n- Free tier: 10-minute max runtime per workflow\n- Standard/Creator: 30-minute max runtime\n\n\n- Pro tier extends this to 1 hour, and you only pay for actual GPU time when workflows are running, not for idle periods. They also offer 900+ pre-trained models.\n\nSo the Free plan gives 400 credits monthly, which works out to roughly 35 five-second videos—that's actually quite limited, maybe only one or two image generations at most.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "你的信息不完整，请再次给我查询"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The user is saying my information is incomplete and wants me to look it up again. Let me fetch the actual Comfy Cloud pricing page more carefully to get the complete information.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "d72acb2974cbda1a58495ddfb12ed0a36e19cff0d35c454037aa6e6b18b123ad",
+          "thinking": "The user is saying my information is incomplete and wants me to look it up again. Let me fetch the actual Comfy Cloud pricing page more carefully to get the complete information.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_4hsuv9j8ovmx_1",
+          "call_id": "call_function_4hsuv9j8ovmx_1",
+          "response_item_id": "fc_function_4hsuv9j8ovmx_1",
+          "type": "function",
+          "function": {
+            "name": "browser_navigate",
+            "arguments": "{\"url\": \"https://cloud.comfy.org/cloud/subscribe\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"success\": false, \"error\": \"Auto-launch failed: Chrome exited early (exit code: unknown) without writing DevToolsActivePort\\n(also tried parsing stderr) Chrome exited before providing DevTools URL\\nChrome stderr:\\n  [75576:75576:0426/161155.952687:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:128] No usable sandbox! If you are running on Ubuntu 23.10+ or another Linux distro that has disabled unprivileged user namespaces with AppArmor, see https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md. Otherwise see https://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox_development.md for more information on developing with the (older) SUID sandbox. If you want to live dangerously and need an immediate workaround, you can try using --no-sandbox.\\n  [0426/161155.959215:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\\n  [0426/161155.959249:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\\nHint: try --args \\\"--no-sandbox\\\" (required in containers, VMs, and some Linux setups)\"}",
+      "tool_call_id": "call_function_4hsuv9j8ovmx_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Browser can't run due to sandbox issue. Let me use curl to fetch the actual subscription page and see the pricing tiers.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "fc5bf9cafc4de3cba4220b8cfd423451778e77a701c0f0e83c90b992f7189535",
+          "thinking": "Browser can't run due to sandbox issue. Let me use curl to fetch the actual subscription page and see the pricing tiers.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ti9i7aklcvwm_1",
+          "call_id": "call_function_ti9i7aklcvwm_1",
+          "response_item_id": "fc_function_ti9i7aklcvwm_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://cloud.comfy.org/cloud/subscribe\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n# Extract text content between pricing-related tags\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\n# Find pricing sections\\nidx = text.find('Standard')\\nif idx > 0:\\n    print('=== STANDARD SECTION ===')\\n    print(text[idx-200:idx+500])\\nidx2 = text.find('Creator')\\nif idx2 > 0:\\n    print('=== CREATOR SECTION ===')\\n    print(text[idx2-200:idx2+500])\\nidx3 = text.find('Pro')\\nif idx3 > 0:\\n    print('=== PRO SECTION ===')\\n    print(text[idx3-200:idx3+500])\\n\\\" 2>/dev/null\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"=== PRO SECTION ===\\nvar isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches bg = isDark ? '#202020' : '#f5f5f5' fg = isDark ? '#ffffff' : '#000000' } document.documentElement.style.setProperty('--bg-color', bg) document.documentElement.style.setProperty('--fg-color', fg) var el = document.getElementById('splash-loader') if (el) { el.style.background = bg el.style.color = fg } })()\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ti9i7aklcvwm_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The curl approach isn't getting the pricing page content properly. Let me try a different approach - search for the pricing information using a search engine approach or use a different API endpoint.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "3882c2b78d8e4de16ffa613e8b3a875cd57ff1e2bdc00e5e3d07bd2c5b3171f1",
+          "thinking": "The curl approach isn't getting the pricing page content properly. Let me try a different approach - search for the pricing information using a search engine approach or use a different API endpoint.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_f2kawyj6eeal_1",
+          "call_id": "call_function_f2kawyj6eeal_1",
+          "response_item_id": "fc_function_f2kawyj6eeal_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://cloud.comfy.org\\\" 2>/dev/null | grep -i \\\"price\\\\|cost\\\\|\\\\$\\\\|credit\\\\|plan\\\\|tier\\\\|subscribe\\\" | head -50\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"<!doctype html>\\n<html lang=\\\"en\\\">\\n  <head>\\n    <meta charset=\\\"UTF-8\\\" />\\n    <title>ComfyUI</title>\\n    <meta\\n      name=\\\"viewport\\\"\\n      content=\\\"width=device-width, initial-scale=1.0, user-scalable=no\\\"\\n    />\\n    <link rel=\\\"stylesheet\\\" type=\\\"text/css\\\" href=\\\"materialdesignicons.min.css\\\" />\\n\\n    <!-- Fullscreen mode on mobile browsers -->\\n    <meta name=\\\"mobile-web-app-capable\\\" content=\\\"yes\\\" />\\n    <!-- Status bar style (eg. black or transparent) -->\\n    <meta name=\\\"apple-mobile-web-app-status-bar-style\\\" content=\\\"black\\\" />\\n    <style>\\n      @media (prefers-color-scheme: dark) {\\n        :root {\\n          /* Setting it early for background during load */\\n          --bg-color: #202020;\\n          --fg-color: #ffffff;\\n        }\\n      }\\n      html,\\n      body {\\n        width: 100%;\\n        height: 100%;\\n        margin: 0;\\n      }\\n      body {\\n        display: grid;\\n        background-color: var(--bg-color);\\n        background-image: var(--bg-img);\\n        background-position: center;\\n        background-size: cover;\\n        background-repeat: no-repeat;\\n      }\\n      .visually-hidden {\\n        position: absolute;\\n        width: 1px;\\n        height: 1px;\\n        padding: 0;\\n        margin: -1px;\\n        overflow: hidden;\\n        clip-path: inset(50%);\\n        white-space: nowrap;\\n        border: 0;\\n      }\\n    </style>\\n    <style>\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_f2kawyj6eeal_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The main cloud.comfy.org page doesn't have pricing info - it's the app itself. Let me try the pricing page directly.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "14d12a521da07853c5fe111ec81f1b252c3518ce13ea57108e44fe21cbd5abd6",
+          "thinking": "The main cloud.comfy.org page doesn't have pricing info - it's the app itself. Let me try the pricing page directly.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_wl130pxf2lem_1",
+          "call_id": "call_function_wl130pxf2lem_1",
+          "response_item_id": "fc_function_wl130pxf2lem_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re, json\\nhtml = sys.stdin.read()\\n# Try to extract JSON-LD or script data with pricing\\npatterns = [\\n    r'\\\\\\\"planType\\\\\\\":\\\\\\\"([^\\\\\\\"]+)\\\\\\\"',\\n    r'\\\\\\\"price\\\\\\\":(\\\\d+)',\\n    r'\\\\\\\"credits\\\\\\\":(\\\\d+)',\\n    r'(\\\\$20)\\\\s*',\\n    r'(\\\\$35)\\\\s*',\\n    r'(\\\\$100)\\\\s*',\\n    r'Freedom\\\\s*\\\\$0',\\n    r'Standard\\\\s*\\\\$20',\\n    r'Creator\\\\s*\\\\$35',\\n    r'Pro\\\\s*\\\\$100',\\n    r'Enterprise',\\n]\\nfor pat in patterns:\\n    matches = re.findall(pat, html, re.IGNORECASE)\\n    if matches:\\n        print(f'Pattern {pat}: {matches}')\\n\\\" 2>/dev/null\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Pattern Enterprise: ['enterprise', 'Enterprise', 'ENTERPRISE', 'ENTERPRISE', 'Enterprise', 'enterprise', 'ENTERPRISE', 'Enterprise', 'enterprise', 'enterprise', 'Enterprise', 'enterprise', 'Enterprise']\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_wl130pxf2lem_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The curl approach isn't rendering the JavaScript content. The pricing page is client-side rendered (Astro framework with hydration). Let me try a different approach - search for Comfy Cloud pricing via web search, or try to access the API directly.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "278f1da54cdef6fcc6c0515ec20f44ec4b807106e39d35652c58b15b119f6fdb",
+          "thinking": "The curl approach isn't rendering the JavaScript content. The pricing page is client-side rendered (Astro framework with hydration). Let me try a different approach - search for Comfy Cloud pricing via web search, or try to access the API directly.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_51wjctntx2hf_1",
+          "call_id": "call_function_51wjctntx2hf_1",
+          "response_item_id": "fc_function_51wjctntx2hf_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://cloud.comfy.org/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n# Remove HTML tags\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\nprint(text[2000:6000])\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"tProperty('--bg-color', bg) document.documentElement.style.setProperty('--fg-color', fg) var el = document.getElementById('splash-loader') if (el) { el.style.background = bg el.style.color = fg } })()\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_51wjctntx2hf_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "It seems like the cloud.comfy.org site is a JavaScript-rendered app and the curl just gets the initial loader HTML. Let me try to access the Comfy Cloud documentation or a different URL for pricing information.\n\nLet me try their docs or API endpoint.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "9f35379615e4cdd2cc2189a389e842c646b400d279949586935732fa09cf3b52",
+          "thinking": "It seems like the cloud.comfy.org site is a JavaScript-rendered app and the curl just gets the initial loader HTML. Let me try to access the Comfy Cloud documentation or a different URL for pricing information.\n\nLet me try their docs or API endpoint.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_dzy9oh4knkfo_1",
+          "call_id": "call_function_dzy9oh4knkfo_1",
+          "response_item_id": "fc_function_dzy9oh4knkfo_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -s \\\"https://docs.comfy.org/cloud\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\n# Find pricing related content\\nidx = text.lower().find('price')\\nif idx > 0:\\n    print(text[max(0,idx-100):idx+500])\\nelse:\\n    print(text[500:3000])\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"le\\\\\\\":\\\\\\\"Pricing\\\\\\\",\\\\\\\"description\\\\\\\":\\\\\\\"This article lists the pricing of the current Partner Nodes. All prices are in credits (211 credits = 1 USD).\\\\\\\",\\\\\\\"sidebarTitle\\\\\\\":\\\\\\\"Pricing\\\\\\\",\\\\\\\"mode\\\\\\\":\\\\\\\"wide\\\\\\\",\\\\\\\"href\\\\\\\":\\\\\\\"/tutorials/partner-nodes/pricing\\\\\\\"},{\\\\\\\"group\\\\\\\":\\\\\\\"Black Forest Labs\\\\\\\",\\\\\\\"pages\\\\\\\":[{\\\\\\\"title\\\\\\\":\\\\\\\"Flux 1.1 Pro Ultra Image API Node ComfyUI Official Workflow Examples\\\\\\\",\\\\\\\"description\\\\\\\":\\\\\\\"This guide covers how to use the Flux 1.1 Pro Ultra Image Partner node in ComfyUI\\\\\\\",\\\\\\\"sidebarTitle\\\\\\\":\\\\\\\"Flux 1.1 Pro Ultra Image\\\\\\\",\\\\\\\"href\\\\\\\":\\\\\\\"/tutorials/partner-nodes/black-forest-labs/flux-1-1-pro-ultra-image\\\\\\\"},{\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_dzy9oh4knkfo_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The docs don't have pricing info. Let me try a different approach - searching for the actual Comfy Cloud subscribe page or a third-party source that has the pricing table.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "aba16a918274848a1023921c6eed232850450be8286e97f8d17e8913767da3d1",
+          "thinking": "The docs don't have pricing info. Let me try a different approach - searching for the actual Comfy Cloud subscribe page or a third-party source that has the pricing table.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_1jhpsqtea4bf_1",
+          "call_id": "call_function_1jhpsqtea4bf_1",
+          "response_item_id": "fc_function_1jhpsqtea4bf_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://cloud.comfy.org/cloud/subscribe?tier=standard&cycle=monthly\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\n# Search for credit/price related content\\nfor keyword in ['credit', 'month', 'price', '4200', '7400', '21100', 'standard', 'creator', 'pro']:\\n    idx = text.lower().find(keyword)\\n    if idx > 0:\\n        print(f'Found [{keyword}] at {idx}:', text[max(0,idx-50):idx+200])\\n        print('---')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Found [pro] at 2001: ' : '#000000' } document.documentElement.style.setProperty('--bg-color', bg) document.documentElement.style.setProperty('--fg-color', fg) var el = document.getElementById('splash-loader') if (el) { el.style.background = bg el.style.color = fg } })() \\n---\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_1jhpsqtea4bf_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The cloud.comfy.org subscribe page is likely a JavaScript-rendered page that doesn't expose pricing in the raw HTML. Let me try using the Comfy API docs or a different approach to find the pricing information.\n\nLet me try accessing the comfy.org pricing page with a different approach, or search for the information from a search engine.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "5915714f7ca145dba4069fd534b83d8295727afedc0e4e6c819302908d7babfc",
+          "thinking": "The cloud.comfy.org subscribe page is likely a JavaScript-rendered page that doesn't expose pricing in the raw HTML. Let me try using the Comfy API docs or a different approach to find the pricing information.\n\nLet me try accessing the comfy.org pricing page with a different approach, or search for the information from a search engine.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_vl7boo3cqluj_1",
+          "call_id": "call_function_vl7boo3cqluj_1",
+          "response_item_id": "fc_function_vl7boo3cqluj_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" -H \\\"Accept: text/html\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re, json\\n\\nhtml = sys.stdin.read()\\n\\n# Look for structured data\\n# Find JSON-like objects\\njson_patterns = re.findall(r'\\\\{[^{}]*(?:price|credit|cost)[^{}]*\\\\}', html, re.IGNORECASE)\\nfor j in json_patterns[:10]:\\n    print(j)\\n    print('---')\\n\\n# Look for script tags with data\\nscript_data = re.findall(r'window\\\\.dataLayer\\\\s*=\\\\s*(\\\\[.*?\\\\]);', html, re.DOTALL)\\nfor d in script_data[:3]:\\n    print('dataLayer:', d[:500])\\n\\\" 2>/dev/null\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"{&quot;name&quot;:&quot;PriceSection&quot;,&quot;value&quot;:true}\\n---\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_vl7boo3cqluj_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The pricing page is client-side rendered (Astro), so curl can't get the actual pricing content. Let me try to access the API directly, or use the pricing data I already extracted from the first curl attempt.\n\nActually, from the first curl of `/cloud/pricing`, I did get the full pricing info embedded in the HTML. Let me look at that output again:\n\n- Free: $0, 400 credits (~35 5s videos)\n- Standard: $20, 4,200 credits (~380 5s videos)\n- Creator: $35, 7,400 credits (~670 5s videos)\n- Pro: $100, 21,100 credits (~1,915 5s videos)\n\n\n- Enterprise: (contact sales)\n\nI have the complete pricing structure already. Let me present this to the user clearly. But actually, the user asked me to re-check because they felt my information was incomplete. Let me try accessing the pricing page through a different approach to get more complete data.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "e191258c3470383c21d4c98d458ef237926113b8ccd070e250d58feb3ae2ed07",
+          "thinking": "The pricing page is client-side rendered (Astro), so curl can't get the actual pricing content. Let me try to access the API directly, or use the pricing data I already extracted from the first curl attempt.\n\nActually, from the first curl of `/cloud/pricing`, I did get the full pricing info embedded in the HTML. Let me look at that output again:\n\n- Free: $0, 400 credits (~35 5s videos)\n- Standard: $20, 4,200 credits (~380 5s videos)\n- Creator: $35, 7,400 credits (~670 5s videos)\n- Pro: $100, 21,100 credits (~1,915 5s videos)\n\n\n- Enterprise: (contact sales)\n\nI have the complete pricing structure already. Let me present this to the user clearly. But actually, the user asked me to re-check because they felt my information was incomplete. Let me try accessing the pricing page through a different approach to get more complete data.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_e89s2hus12nb_1",
+          "call_id": "call_function_e89s2hus12nb_1",
+          "response_item_id": "fc_function_e89s2hus12nb_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://api.comfy.org/v1/inference/credit_balance\\\" 2>/dev/null | head -50\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"{\\\"message\\\":\\\"Not Found\\\"}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_e89s2hus12nb_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Let me try to get the pricing page with more specific extraction. The issue is the pricing content seems to be dynamically loaded by JavaScript. Let me try a different approach - use a search to find recent pricing info from web sources.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "39d67c2be0a1e748081aa987814a4b93cd3592b5898c060026929ea4ff96bec1",
+          "thinking": "Let me try to get the pricing page with more specific extraction. The issue is the pricing content seems to be dynamically loaded by JavaScript. Let me try a different approach - use a search to find recent pricing info from web sources.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_gotlckjek6ze_1",
+          "call_id": "call_function_gotlckjek6ze_1",
+          "response_item_id": "fc_function_gotlckjek6ze_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n# Extract text between specific markers\\n# Look for the pricing tiers in the raw HTML\\ntext = html\\n\\n# Find credit-related content  \\nidx = text.find('4200')\\nif idx > 0:\\n    print('4200 context:', text[max(0,idx-300):idx+300])\\n    print('=====')\\n    \\nidx = text.find('7400')\\nif idx > 0:\\n    print('7400 context:', text[max(0,idx-300):idx+300])\\n    print('=====')\\n    \\nidx = text.find('21100')\\nif idx > 0:\\n    print('21100 context:', text[max(0,idx-300):idx+300])\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_gotlckjek6ze_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The HTML might be compressed or the numbers are encoded differently. Let me search for the numbers in a different way, maybe as unicode entities or different encodings.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "175989c9075a42cf4b8a5b8e706cce53ffdb36cb03842a9da94e69558a44390c",
+          "thinking": "The HTML might be compressed or the numbers are encoded differently. Let me search for the numbers in a different way, maybe as unicode entities or different encodings.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_7oh09ei57lzh_1",
+          "call_id": "call_function_7oh09ei57lzh_1",
+          "response_item_id": "fc_function_7oh09ei57lzh_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n\\n# Search for ALL numbers that could be credit amounts\\n# 400, 4200, 7400, 21100, 35, 100, 20\\nnumbers = re.findall(r'(?:price|credits?|amount|cycle|month|year|\\\\$)\\\\s*:?\\\\s*[\\\\\\\"\\\\'\\\\\\\\s]*(\\\\d{3,6})', html, re.IGNORECASE)\\nprint('Numbers found:', set(numbers))\\n\\n# Also search for plan names with prices nearby\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\nprint('Length of text:', len(text))\\n\\n# Search for plan names  \\nfor plan in ['FREE', 'STANDARD', 'CREATOR', 'PRO', 'ENTERPRISE', 'Freedom', 'Standard', 'Creator', 'Pro']:\\n    idx = text.upper().find(plan.upper())\\n    if idx > 0:\\n        print(f'Plan [{plan}] context:', text[max(0,idx-30):idx+200])\\n        print('---')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Numbers found: set()\\nLength of text: 10315\\nPlan [FREE] context: forward, usage-based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB\\n---\\nPlan [STANDARD] context: rd, usage-based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM\\n---\\nPlan [CREATOR] context: -based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM) START F\\n---\\nPlan [PRO] context: )(); (()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!=\\\"symbol\\\"?o+\\\"\\\":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new\\n---\\nPlan [ENTERPRISE] context: mfy Cloud Comfy API NEW Comfy Enterprise Pricing Community ▾ Comfy Hub NEW Gallery Resources ▾ Blogs GitHub Discord Docs YouTube Company ▾ About Us Careers Customer Stories 110K DOWNLOAD LOCAL LAUNCH CLOUD Pricing Access cloud-pow\\n---\\nPlan [Standard] context: rd, usage-based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM\\n---\\nPlan [Creator] context: -based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM) START F\\n---\\nPlan [Pro] context: )(); (()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!=\\\"symbol\\\"?o+\\\"\\\":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new\\n---\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_7oh09ei57lzh_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Interesting - the pricing page I fetched earlier from the curl output had all the pricing details. But when I fetch the page directly from `cloud.comfy.org/cloud/subscribe` it seems to be returning a splash screen or something. Let me re-fetch the pricing page properly.\n\nWait - looking back at the original curl output I got earlier from the first `curl -s \"https://www.comfy.org/cloud/pricing\"` call, I can see the full pricing data in there. The issue is I parsed it wrong. Let me go back and re-parse that raw output more carefully.\n\nFrom the first successful curl, I can see:\n- FREE: $0/month, 400 credits, ~35 5s videos\n\n\n- STANDARD: $20/month, 4,200 credits, ~380 5s videos\n- CREATOR: $35/month, 7,400 credits, ~670 5s videos\n- PRO: $100/month, 21,100 credits, ~1,915 5s videos\n\nI need to re-fetch the page to get the complete Enterprise pricing information.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "a5bb3d01a66584a00ca0f9b3ffbe760af1374a7181cba1ba0a79819314d94ff2",
+          "thinking": "Interesting - the pricing page I fetched earlier from the curl output had all the pricing details. But when I fetch the page directly from `cloud.comfy.org/cloud/subscribe` it seems to be returning a splash screen or something. Let me re-fetch the pricing page properly.\n\nWait - looking back at the original curl output I got earlier from the first `curl -s \"https://www.comfy.org/cloud/pricing\"` call, I can see the full pricing data in there. The issue is I parsed it wrong. Let me go back and re-parse that raw output more carefully.\n\nFrom the first successful curl, I can see:\n- FREE: $0/month, 400 credits, ~35 5s videos\n\n\n- STANDARD: $20/month, 4,200 credits, ~380 5s videos\n- CREATOR: $35/month, 7,400 credits, ~670 5s videos\n- PRO: $100/month, 21,100 credits, ~1,915 5s videos\n\nI need to re-fetch the page to get the complete Enterprise pricing information.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_25druleh7bsn_1",
+          "call_id": "call_function_25druleh7bsn_1",
+          "response_item_id": "fc_function_25druleh7bsn_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\ntext = text.replace('&#39;', \\\\\\\"'\\\\\\\").replace('&amp;', '&')\\n\\n# Extract the FULL pricing section\\nidx = text.find('Pricing')\\nif idx > 0:\\n    print(text[idx:idx+3000])\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Pricing — Comfy Cloud {\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"Organization\\\",\\\"name\\\":\\\"Comfy Org\\\",\\\"url\\\":\\\"https://comfy.org\\\",\\\"logo\\\":\\\"https://comfy.org/icons/logomark.svg\\\",\\\"sameAs\\\":[\\\"https://github.com/comfyanonymous/ComfyUI\\\",\\\"https://discord.gg/comfyorg\\\",\\\"https://x.com/comaboratory\\\",\\\"https://reddit.com/r/comfyui\\\",\\\"https://linkedin.com/company/comfyorg\\\",\\\"https://instagram.com/comfyorg\\\"]} {\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"WebSite\\\",\\\"name\\\":\\\"Comfy\\\",\\\"url\\\":\\\"https://comfy.org\\\"} (function(){const gtmId = \\\"GTM-NP9JM6K7\\\"; ;(function (w, d, s, l, i) { w[l] = w[l] || [] w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' }) var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '' j.async = true j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl f.parentNode.insertBefore(j, f) })(window, document, 'script', 'dataLayer', gtmId) })(); astro-island,astro-slot,astro-static-slot{display:contents} (()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event(\\\"astro:load\\\"));})(); (()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!=\\\"symbol\\\"?o+\\\"\\\":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!=\\\"object\\\"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,\\\"Component\\\");d(this,\\\"hydrator\\\");d(this,\\\"hydrate\\\",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest(\\\"astro-island[ssr]\\\");if(e){e.addEventListener(\\\"astro:hydrate\\\",this.hydrate,{once:!0});return}let c=this.querySelectorAll(\\\"astro-slot\\\"),n={},h=this.querySelectorAll(\\\"template[data-astro-template]\\\");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute(\\\"data-astro-template\\\")||\\\"default\\\"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute(\\\"name\\\")||\\\"default\\\"]=r.innerHTML)}let p;try{p=this.hasAttribute(\\\"props\\\")?m(JSON.parse(this.getAttribute(\\\"props\\\"))):{}}catch(r){let s=this.getAttribute(\\\"component-url\\\")||\\\" \\\",v=this.getAttribute(\\\"component-export\\\");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute(\\\"props\\\"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute(\\\"client\\\")}),this.removeAttribute(\\\"ssr\\\"),this.dispatchEvent(new CustomEvent(\\\"astro:hydrate\\\"))});d(this,\\\"unmount\\\",()=>{this.isConnected||this.dispatchEvent(new CustomEvent(\\\"astro:unmount\\\"))})}disconnectedCallback(){document.removeEventListener(\\\"astro:after-swap\\\",this.unmo\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_25druleh7bsn_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The text is heavily obfuscated by the JavaScript code. Let me try to search for the pricing data in a different way. The pricing content from the earlier curl output was there but got truncated. Let me try extracting specific parts from the raw HTML more carefully.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "c496dd47ba39322499726a5935ee83338303815bd60b152e3adaa073f834e2e3",
+          "thinking": "The text is heavily obfuscated by the JavaScript code. Let me try to search for the pricing data in a different way. The pricing content from the earlier curl output was there but got truncated. Let me try extracting specific parts from the raw HTML more carefully.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_qb6oahdchxxw_1",
+          "call_id": "call_function_qb6oahdchxxw_1",
+          "response_item_id": "fc_function_qb6oahdchxxw_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | grep -oP '(\\\\$0|\\\\$20|\\\\$35|\\\\$100|400 monthly|4200 monthly|7400 monthly|21100 monthly|35 5s|380 5s|670 5s|1915 5s|~35|~380|~670|~1915)' | head -30\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"$0\\n400 monthly\\n~35\\n$20\\n~380\\n$35\\n400 monthly\\n~670\\n$100\\n$0\\n400 monthly\\n~35\\n$20\\n~380\\n$35\\n400 monthly\\n~670\\n$100\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_qb6oahdchxxw_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Hmm, I'm only getting $0, $20, $35, $100 and the credit amounts for Free tier (400) and the video equivalents. The credit amounts for other tiers aren't showing up cleanly in the grep. Let me try a different approach to extract the credit amounts for each tier.\n\nWait - looking at the first curl result more carefully:\n\nFrom the very first HTML dump I got from the pricing page, I saw:\n- $0 /month - 400 monthly credits - ~35 5s videos\n- $20 /month - 4200 monthly credits - ~380 5s videos  \n- $35 /month - 7400 monthly credits - ~670 5s videos\n\n\n- $100 /month - 21100 monthly credits - ~1915 5s videos\n\nSo the credit amounts for Standard, Creator, and Pro tiers aren't appearing in my grep because they're probably HTML-encoded differently or embedded within attributes rather than as plain text.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "e049c240876adee59ffd9b6299e8403d44e911df42ac425b5e38773a819aa3cc",
+          "thinking": "Hmm, I'm only getting $0, $20, $35, $100 and the credit amounts for Free tier (400) and the video equivalents. The credit amounts for other tiers aren't showing up cleanly in the grep. Let me try a different approach to extract the credit amounts for each tier.\n\nWait - looking at the first curl result more carefully:\n\nFrom the very first HTML dump I got from the pricing page, I saw:\n- $0 /month - 400 monthly credits - ~35 5s videos\n- $20 /month - 4200 monthly credits - ~380 5s videos  \n- $35 /month - 7400 monthly credits - ~670 5s videos\n\n\n- $100 /month - 21100 monthly credits - ~1915 5s videos\n\nSo the credit amounts for Standard, Creator, and Pro tiers aren't appearing in my grep because they're probably HTML-encoded differently or embedded within attributes rather than as plain text.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_844o3omyffrq_1",
+          "call_id": "call_function_844o3omyffrq_1",
+          "response_item_id": "fc_function_844o3omyffrq_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n\\n# The pricing info is in astro-island components - let's look for the section that has credit info\\n# Extract all text that looks like credit/price info\\npatterns = [\\n    r'4200[^<]{0,100}',\\n    r'7400[^<]{0,100}', \\n    r'21100[^<]{0,100}',\\n    r'380[^<]{0,50}',\\n    r'670[^<]{0,50}',\\n    r'1915[^<]{0,50}',\\n]\\n\\nfor pat in patterns:\\n    m = re.search(pat, html)\\n    if m:\\n        start = max(0, m.start()-50)\\n        end = min(len(html), m.end()+100)\\n        context = re.sub(r'<[^>]+>', ' ', html[start:end])\\n        context = re.sub(r'\\\\s+', ' ', context).strip()\\n        print(f'Pattern {pat}: ...{context}...')\\n        print()\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Pattern 380[^<]{0,50}: ...lass=\\\"text-primary-comfy-canvas/80 px-6 text-xs\\\">~380 5s videos* Everythin...\\n\\nPattern 670[^<]{0,50}: ...lass=\\\"text-primary-comfy-canvas/80 px-6 text-xs\\\">~670 5s videos* Everythin...\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_844o3omyffrq_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Hmm, I'm not finding 4200, 7400, 21100 directly in the HTML. Let me try a different approach - look for the context around these video count numbers and find the credit amounts.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "8ef7a4fcffcdba97aaa2562b96c6f28ca738e61b5547b416de4cb4bae439c4c6",
+          "thinking": "Hmm, I'm not finding 4200, 7400, 21100 directly in the HTML. Let me try a different approach - look for the context around these video count numbers and find the credit amounts.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_xsbad285m9yz_1",
+          "call_id": "call_function_xsbad285m9yz_1",
+          "response_item_id": "fc_function_xsbad285m9yz_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\n\\n# Let's find sections around the video counts\\n# 35 5s, 380 5s, 670 5s, 1915 5s\\nfor count in ['35 5s', '380 5s', '670 5s', '1915 5s']:\\n    idx = html.find(count)\\n    if idx > 0:\\n        # Get surrounding context (before and after)\\n        start = max(0, idx - 800)\\n        end = min(len(html), idx + 200)\\n        section = html[start:end]\\n        # Strip HTML\\n        text = re.sub(r'<[^>]+>', ' ', section)\\n        text = re.sub(r'\\\\s+', ' ', text)\\n        # Find credit amounts near this\\n        credits = re.findall(r'(\\\\d{3,6})\\\\s*(?:monthly|credits)', text, re.IGNORECASE)\\n        prices = re.findall(r'\\\\\\\\\\\\$(\\\\d+)', text)\\n        print(f'~{count}: credits={credits}, prices=\\\\${prices}')\\n        print()\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"~35 5s: credits=['400'], prices=$['0']\\n\\n~380 5s: credits=['200'], prices=$['20']\\n\\n~670 5s: credits=['400'], prices=$['35']\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_xsbad285m9yz_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "Hmm, the credit amounts don't look right for standard/creator/pro. Let me think about this more carefully.\n\nActually, looking at this again, I think the issue is that my context windows around \"~35 5s\", \"~380 5s\", etc. are capturing credit amounts from different plans, not the right ones.\n\nLet me try a different approach - look at the full text content of the page to extract each pricing card's details.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "9e19fb985dd58624348fee1062440e746c95a02493f094b98fd3344ba239f041",
+          "thinking": "Hmm, the credit amounts don't look right for standard/creator/pro. Let me think about this more carefully.\n\nActually, looking at this again, I think the issue is that my context windows around \"~35 5s\", \"~380 5s\", etc. are capturing credit amounts from different plans, not the right ones.\n\nLet me try a different approach - look at the full text content of the page to extract each pricing card's details.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_vt9n56m269rv_1",
+          "call_id": "call_function_vt9n56m269rv_1",
+          "response_item_id": "fc_function_vt9n56m269rv_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"curl -sL \\\"https://www.comfy.org/cloud/pricing\\\" 2>/dev/null | python3 -c \\\"\\nimport sys, re\\nhtml = sys.stdin.read()\\ntext = re.sub(r'<[^>]+>', ' ', html)\\ntext = re.sub(r'\\\\s+', ' ', text)\\n\\n# The text has pricing info but mobile/desktop versions mixed\\n# Let's find pricing section markers\\nidx = text.find('Access cloud-powered')\\nif idx > 0:\\n    section = text[idx:idx+2000]\\n    print(section)\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"Access cloud-powered ComfyUI workflows with straightforward, usage-based pricing. FREE STANDARD CREATOR PRO ENTERPRISE FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM) START FREE STANDARD For individuals creating workflows $20 /month Includes 4,200 monthly credits with top-ups available ~380 5s videos* Everything in Free, plus: ✓ 30-minute max runtime per workflow ✓ Add more credits anytime SUBSCRIBE TO STANDARD CREATOR MOST POPULAR Small teams building fine-tuned, repeatable workflows $35 /month Includes 7,400 monthly credits with top-ups available ~670 5s videos* Everything in Standard, plus: ✓ Import your own LoRAs SUBSCRIBE TO CREATOR PRO For growing teams running Comfy in production $100 /month Includes 21,100 monthly credits with top-ups available ~1,915 5s videos* Everything in Creator, plus: ✓ Longer workflow runtime (up to 1 hour) SUBSCRIBE TO PRO FREE Explore Comfy&#39;s possibilities $0 /month Includes 400 monthly credits ~35 5s videos* START FREE ✓ 10-minute max runtime per workflow ✓ Runs on RTX 6000 Pro GPUs (96GB VRAM) STANDARD For individuals creating workflows $20 /month Includes 4,200 monthly credits with top-ups available ~380 5s videos* SUBSCRIBE TO STANDARD Everything in Free, plus: ✓ 30-minute max runtime per workflow ✓ Add more credits anytime CREATOR MOST POPULAR Small teams building fine-tuned, repeatable workflows $35 /month Includes 7,400 monthly credits with top-ups available ~670 5s videos* SUBSCRIBE TO CREATOR Everything in Standard, plus: ✓ Import your own LoRAs PRO For growing teams running Comfy in production $100 /month Includes 21,100 monthly credits with top-ups available ~1,915 5s videos* SUBSCRIBE TO PRO Everything in Creator, plus: ✓ Longer workflow runtime (up to 1 hour) ENTERPRISE Looking for Enterprise Solutions? For teams running Comfy in production, and at scale. LEARN MORE ENTERPRISE Looking for Enterpr\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_vt9n56m269rv_1"
+    },
+    {
+      "role": "assistant",
+      "content": "完整信息查到了：\n\n---\n\n## Comfy Cloud 完整定价\n\n| 方案 | 月费 | 每月额度 | 约等于 | 主要功能 |\n|------|------|----------|--------|----------|\n| **Free** | $0 | 400 credits | ~35个5秒视频 | 10分钟/任务上限，RTX 6000 Pro |\n| **Standard** | $20 | 4,200 credits | ~380个5秒视频 | 30分钟/任务上限，可充值额度 |\n| **Creator** | $35 | 7,400 credits | ~670个5秒视频 | 可导入自己的 LoRA |\n| **Pro** | $100 | 21,100 credits | ~1,915个5秒视频 | 任务运行时间最长1小时 |\n\n**换算**：211 credits = $1 USD\n\n---\n\n## 关键细节\n\n- **按使用计费**：只在任务运行时收费，空闲时间不计费\n- **额度滚动**：未用完的可滚动到下个月，最长保留1年\n- **GPU**：RTX 6000 Pro，96GB 显存\n- **企业版**：联系销售，批量定制\n\n---\n\n## 你现在的工具选择\n\n| 工具 | 费用 | 用途 |\n|------|------|------|\n| **Mac Mini M4 本地跑** | 免费 | ComfyUI + SD 本地画图 |\n| **Comfy Cloud** | $0~$100/月 | 云端 ComfyUI，按需付费 |\n| **SuperGrok** | $30/月 | 包含 Imagine 图片+视频生成 |\n| **Runway** | $15/月 | 视频生成 |\n\n你需要的是**画图**还是**视频**？Comfy Cloud 主要解决图片生成，视频还是靠 SuperGrok/Runway。",
+      "reasoning": "Now I have the complete pricing information. Let me present it clearly to the user.",
+      "finish_reason": "stop",
+      "reasoning_details": [
+        {
+          "signature": "4ad8f86d9c051fe98908563feee381ec8d0be7d480448629b5fc77c7515122b7",
+          "thinking": "Now I have the complete pricing information. Let me present it clearly to the user.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "Review the conversation above and consider saving or updating a skill if appropriate.\n\nFocus on: was a non-trivial approach used to complete a task that required trial and error, or changing course due to experiential findings along the way, or did the user expect or desire a different method or outcome?\n\nIf a relevant skill already exists, update it with what you learned. Otherwise, create a new skill if the approach is reusable.\nIf nothing is worth saving, just say 'Nothing to save.' and stop."
+    },
+    {
+      "role": "assistant",
+      "content": "Nothing to save.\n\nThe task was a straightforward pricing lookup with no reusable workflow — just a one-off curl/grep extraction with trial-and-error on HTML parsing. The learnings are too specific to this particular website's structure (Astro-rendered, mixed desktop/mobile HTML) to justify a skill.",
+      "reasoning": "The user is asking me to review the conversation and consider saving a skill. Let me think about what happened:\n\n1. User asked about Comfy Cloud pricing - a simple research task\n2. I initially tried to use the browser to navigate to the website, but browser navigation failed (Chrome sandbox issue in Linux VM)\n3. I then used curl to fetch the pricing page, but it returned mostly JavaScript/HTML that was dynamically rendered\n4. I had to use multiple rounds of trial and error:\n   - First curl to comfy.org/cloud/pricing - got HTML but pricing was in JS components\n   - Tried multiple grep patterns to extract pricing - mostly failed\n   - Tried extracting JSON-LD structured data - only found component name \"PriceSection\"\n   - Tried various number patterns (400, 4200, 7400, 21100) - not found directly\n   - Tried finding text between plan names and credit amounts - the text was mixed between desktop and mobile versions\n   - Finally found the full pricing text by finding the section starting \"Access cloud-powered\"\n\nThe key learnings:\n- Comfy Cloud pricing page is heavily JavaScript-rendered (Astro framework)\n- curl alone doesn't get dynamic content\n- The HTML has both desktop and mobile versions mixed\n- Key pricing info was extractable by finding the text section starting with \"Access cloud-powered\" and stripping HTML tags\n- The pricing: Free=$0/400 credits, Standard=$20/4200, Creator=$35/7400, Pro=$100/21100\n\nThis is a non-trivial approach that required trial and error. I should save a skill about researching dynamically rendered web pages for pricing information, especially for Astro/React-heavy sites.\n\nActually, let me reconsider. Is this skill really that reusable? It's fairly specific to:\n1. Comfy Cloud's website structure\n2. Astro JS framework pages\n3. The specific curl/python extraction approach\n\n\nThe core pattern—fetching HTML from JavaScript-heavy pages and extracting pricing through text section identification rather than direct pattern matching—could apply broadly to similar sites. For now, I'll save this as a skill focused on researching cloud service pricing from dynamic web pages.",
+      "finish_reason": "stop"
+    }
+  ]
+}
