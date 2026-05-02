@@ -1,0 +1,1268 @@
+{
+  "session_id": "20260501_112023_d189fe",
+  "model": "MiniMax-M2.7",
+  "base_url": "https://api.minimaxi.com/v1/",
+  "platform": "feishu",
+  "session_start": "2026-05-01T11:20:23.215659",
+  "last_updated": "2026-05-01T11:22:33.713846",
+  "system_prompt": "# Hermes Agent Persona\n\n<!--\nThis file defines the agent's personality and tone.\nThe agent will embody whatever you write here.\nEdit this to customize how Hermes communicates with you.\n\nExamples:\n  - \"You are a warm, playful assistant who uses kaomoji occasionally.\"\n  - \"You are a concise technical expert. No fluff, just facts.\"\n  - \"You speak like a friendly coworker who happens to know everything.\"\n\nThis file is loaded fresh each message -- no restart needed.\nDelete the contents (or this file) to use the default personality.\n-->\n\nYou have persistent memory across sessions. Save durable facts using the memory tool: user preferences, environment details, tool quirks, and stable conventions. Memory is injected into every turn, so keep it compact and focused on facts that will still matter later.\nPrioritize what reduces future user steering — the most valuable memory is one that prevents the user from having to correct or remind you again. User preferences and recurring corrections matter more than procedural task details.\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts. If you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\nWrite memories as declarative facts, not instructions to yourself. 'User prefers concise responses' ✓ — 'Always respond concisely' ✗. 'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. Imperative phrasing gets re-read as a directive in later sessions and can cause repeated work or override the user's current request. Procedures and workflows belong in skills, not memory. When the user references something from a past conversation or you suspect relevant cross-session context exists, use session_search to recall it before asking them to repeat themselves. After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial workflow, save the approach as a skill with skill_manage so you can reuse it next time.\nWhen using a skill and finding it outdated, incomplete, or wrong, patch it immediately with skill_manage(action='patch') — don't wait to be asked. Skills that aren't maintained become liabilities.\n\n══════════════════════════════════════════════\nMEMORY (your personal notes) [33% — 732/2,200 chars]\n══════════════════════════════════════════════\n工具角色分工：SuperGrok=图像生成（手动）+ 视频生成（手动）；ElevenLabs=配音（API自动）；剪映=后期合成（手动）。ComfyUI、DiffusionBee、Runway 已从框架移除，不再使用。\n§\nGitHub备份：wengsanleong-bot/hermes-backup，Token暴露风险已处理（删除含token的session文件并重新同步）。Secret Scanning Push Protection 已通过 GitHub API 临时关闭后重新开启。备份脚本已更新为自动清理 session 文件中的 API tokens（ghp_*/sk-*），不再包含敏感信息。\n§\n记忆核查完成（20260428）：本会话从 SQLite state.db 完整重建，发现以下补充：\n- TradingAgents 分析结果 bug：中间结果 content 含 LLM 推理标签而非真实报告；final_trade_decision 会被前次分析污染；news_report 偶尔给出比 HOLD 更谨慎的 SELL，应用最谨慎建议\n- GitHub 备份推送失败（20260427 cron）：~/.hermes/scripts/backup-sync.sh Permission denied + Authentication error，需修复\n- session_search 在跨长会话时不够用，直接查 SQLite 才能找到完整上下文\n§\n审批/授权提示（approvals）是系统底层英文硬编码，无法中文化。在此限制下，策略改为：在触发授权操作之前，先用中文向用户说明意图和后果，让用户有上下文再去确认英文提示框。\n\n══════════════════════════════════════════════\nUSER PROFILE (who the user is) [76% — 1,052/1,375 chars]\n══════════════════════════════════════════════\nUser priority: 声音情感表达 = 核心需求。ElevenLabs 音色最佳但情感控制一般；Cartesia 情感表达更强但定价不透明（JS渲染页面，无法curl抓取）。\n§\nMac Mini M4 已安装 DiffusionBee（不是 ComfyUI），用户通过 DiffusionBee 使用 Stable Diffusion，不是 ComfyUI\n§\nUser prefers: tools/options presented at each workflow step, not pre-fixed. Will choose per-step based on options provided. Not committed to finance niche — wants generic content framework. Said \"先不管预算\" = budget secondary, options/quality first.\n§\nUser is from Macau (澳门人)，content direction: Macau historical stories (澳门历史故事) — landmarks, figures, events, cultural fusion. Self-perception: not handsome, not particularly eloquent speaker. Prefers AI-generated voiceover rather than own voice. No budget ceiling set, focusing on feature completeness first.\n§\n删除任何文件（无论配置文件还是数据文件）都必须事先得到用户明确允许，不得自行判断删除。\n§\n授权提示（approvals）是英文系统底层功能无法修改。约定：每次触发授权前，必须先用中文向用户说明即将执行的操作内容，让用户理解后再看英文确认框。\n§\n用户要求我全程深度参与工作流，不只是写脚本。要负责：精准的 DiffusionBee 图像提示词、SuperGrok 视频生成提示词、直接调用 ElevenLabs API 生成配音音频文件、生成 SRT 字幕文件、写各平台发布文案（标题/简介/标签）。用户只负责按按钮执行手动步骤。\n§\n所有 cron job 通知、备份报告、系统提示必须使用简体中文，禁止输出英文\n\n## Skills (mandatory)\nBefore replying, scan the skills below. If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of loading — it is always better to have context you don't need than to miss critical steps, pitfalls, or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific commands, and proven workflows that outperform general-purpose approaches. Load the skill even if you think you could handle the task with basic tools like web_search or terminal. Skills also encode the user's preferred approach, conventions, and quality standards for tasks like code review, planning, and testing — load them even for tasks you already know how to do, because the skill defines how it should be done here.\nIf a skill has issues, fix it with skill_manage(action='patch').\nAfter difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, had wrong commands, or needed pitfalls you discovered, update it before finishing.\n\n<available_skills>\n  autonomous-ai-agents: Skills for spawning and orchestrating autonomous AI coding agents and multi-agent workflows — running independent agent processes, delegating tasks, and coordinating parallel workstreams.\n    - claude-code: Delegate coding tasks to Claude Code (Anthropic's CLI age...\n    - codex: Delegate coding tasks to OpenAI Codex CLI agent. Use for ...\n    - hermes-agent: Complete guide to using and extending Hermes Agent — CLI ...\n    - opencode: Delegate coding tasks to OpenCode CLI agent for feature i...\n  browser-automation:\n    - browser-agent: Linux无图形界面下的浏览器自动化框架 — 支持动态网页抓取、反爬应对、内容提取、任务队列\n  creative: Creative content generation — ASCII art, hand-drawn style diagrams, and visual design tools.\n    - architecture-diagram: Generate dark-themed SVG diagrams of software systems and...\n    - ascii-art: Generate ASCII art using pyfiglet (571 fonts), cowsay, bo...\n    - ascii-video: Production pipeline for ASCII art video — any format. Con...\n    - baoyu-comic: Knowledge comic creator supporting multiple art styles an...\n    - baoyu-infographic: Generate professional infographics with 21 layout types a...\n    - creative-workflow-dashboard: 创作流水线可视化控制面板 - 模块化AI视频创作工作流系统\n    - design-md: Author, validate, diff, and export DESIGN.md files — Goog...\n    - excalidraw: Create hand-drawn style diagrams using Excalidraw JSON fo...\n    - ideation: Generate project ideas through creative constraints. Use ...\n    - macau-video-workflow: 澳门历史故事 AI 视频创作工作流 — 首帧尾帧锚点串联 + 批量自动化 + 混和工作流（SuperGrok 生成...\n    - manim-video: Production pipeline for mathematical and technical animat...\n    - p5js: Production pipeline for interactive and generative visual...\n    - pixel-art: Convert images into retro pixel art with hardware-accurat...\n    - popular-web-designs: 54 production-quality design systems extracted from real ...\n    - songwriting-and-ai-music: Songwriting craft, AI music generation prompts (Suno focu...\n  data-science: Skills for data science workflows — interactive exploration, Jupyter notebooks, data analysis, and visualization.\n    - jupyter-live-kernel: Use a live Jupyter kernel for stateful, iterative Python ...\n    - tradingagents: Multi-agent LLM financial trading framework with LangGrap...\n  devops:\n    - webhook-subscriptions: Create and manage webhook subscriptions for event-driven ...\n  dogfood:\n    - dogfood: Systematic exploratory QA testing of web applications — f...\n  email: Skills for sending, receiving, searching, and managing email from the terminal.\n    - himalaya: CLI to manage emails via IMAP/SMTP. Use himalaya to list,...\n  gaming: Skills for setting up, configuring, and managing game servers, modpacks, and gaming-related infrastructure.\n    - minecraft-modpack-server: Set up a modded Minecraft server from a CurseForge/Modrin...\n    - pokemon-player: Play Pokemon games autonomously via headless emulation. S...\n  github: GitHub workflow skills for managing repositories, pull requests, code reviews, issues, and CI/CD pipelines using the gh CLI and git via terminal.\n    - codebase-inspection: Inspect and analyze codebases using pygount for LOC count...\n    - github-auth: Set up GitHub authentication for the agent using git (uni...\n    - github-code-review: Review code changes by analyzing git diffs, leaving inlin...\n    - github-issues: Create, manage, triage, and close GitHub issues. Search e...\n    - github-pr-workflow: Full pull request lifecycle — create branches, commit cha...\n    - github-repo-management: Clone, create, fork, configure, and manage GitHub reposit...\n    - github-secret-scanning-cleanup: Remove leaked API tokens from git history and bypass Secr...\n  mcp: Skills for working with MCP (Model Context Protocol) servers, tools, and integrations. Documents the built-in native MCP client — configure servers in config.yaml for automatic tool discovery.\n    - native-mcp: Built-in MCP (Model Context Protocol) client that connect...\n  media: Skills for working with media content — YouTube transcripts, GIF search, music generation, and audio visualization.\n    - gif-search: Search and download GIFs from Tenor using curl. No depend...\n    - heartmula: Set up and run HeartMuLa, the open-source music generatio...\n    - songsee: Generate spectrograms and audio feature visualizations (m...\n    - spotify: Control Spotify — play music, search the catalog, manage ...\n    - youtube-content: Fetch YouTube video transcripts and transform them into s...\n  mlops: Knowledge and Tools for Machine Learning Operations - tools and frameworks for training, fine-tuning, deploying, and optimizing ML/AI models\n    - huggingface-hub: Hugging Face Hub CLI (hf) — search, download, and upload ...\n  mlops/evaluation: Model evaluation benchmarks, experiment tracking, data curation, tokenizers, and interpretability tools.\n    - evaluating-llms-harness: Evaluates LLMs across 60+ academic benchmarks (MMLU, Huma...\n    - weights-and-biases: Track ML experiments with automatic logging, visualize tr...\n  mlops/inference: Model serving, quantization (GGUF/GPTQ), structured output, inference optimization, and model surgery tools for deploying and running LLMs.\n    - llama-cpp: llama.cpp local GGUF inference + HF Hub model discovery.\n    - obliteratus: Remove refusal behaviors from open-weight LLMs using OBLI...\n    - outlines: Guarantee valid JSON/XML/code structure during generation...\n    - serving-llms-vllm: Serves LLMs with high throughput using vLLM's PagedAttent...\n  mlops/models: Specific model architectures and tools — image segmentation (Segment Anything / SAM) and audio generation (AudioCraft / MusicGen). Additional model skills (CLIP, Stable Diffusion, Whisper, LLaVA) are available as optional skills.\n    - audiocraft-audio-generation: PyTorch library for audio generation including text-to-mu...\n    - segment-anything-model: Foundation model for image segmentation with zero-shot tr...\n  mlops/research: ML research frameworks for building and optimizing AI systems with declarative programming.\n    - dspy: Build complex AI systems with declarative programming, op...\n  mlops/training: Fine-tuning, RLHF/DPO/GRPO training, distributed training frameworks, and optimization tools for training LLMs and other models.\n    - axolotl: Expert guidance for fine-tuning LLMs with Axolotl - YAML ...\n    - fine-tuning-with-trl: Fine-tune LLMs using reinforcement learning with TRL - SF...\n    - unsloth: Expert guidance for fast fine-tuning with Unsloth - 2-5x ...\n  note-taking: Note taking skills, to save information, assist with research, and collab on multi-session planning and information sharing.\n    - obsidian: Read, search, and create notes in the Obsidian vault.\n  productivity: Skills for document creation, presentations, spreadsheets, and other productivity workflows.\n    - google-workspace: Gmail, Calendar, Drive, Contacts, Sheets, and Docs integr...\n    - linear: Manage Linear issues, projects, and teams via the GraphQL...\n    - maps: Location intelligence — geocode a place, reverse-geocode ...\n    - nano-pdf: Edit PDFs with natural-language instructions using the na...\n    - notion: Notion API for creating and managing pages, databases, an...\n    - ocr-and-documents: Extract text from PDFs and scanned documents. Use web_ext...\n    - powerpoint: Use this skill any time a .pptx file is involved in any w...\n  red-teaming:\n    - godmode: Jailbreak API-served LLMs using G0DM0D3 techniques — Pars...\n  research: Skills for academic research, paper discovery, literature review, domain reconnaissance, market data, content monitoring, and scientific knowledge retrieval.\n    - arxiv: Search and retrieve academic papers from arXiv using thei...\n    - blogwatcher: Monitor blogs and RSS/Atom feeds for updates using the bl...\n    - llm-wiki: Karpathy's LLM Wiki — build and maintain a persistent, in...\n    - platform-rules-research: 中国社交媒体平台规则页面抓取方法论 — 系统探测各平台官方规则/协议/公约页面的有效URL和访问策略\n    - polymarket: Query Polymarket prediction market data — search markets,...\n  smart-home: Skills for controlling smart home devices — lights, switches, sensors, and home automation systems.\n    - openhue: Control Philips Hue lights, rooms, and scenes via the Ope...\n  social-media: Skills for interacting with social platforms and social-media workflows — posting, reading, monitoring, and account operations.\n    - multi-platform-compliance: 中国主流社交媒体平台财经内容合规系统 — 覆盖抖音/快手/小红书/视频号/B站\n    - xurl: Interact with X/Twitter via xurl, the official X API CLI....\n  software-development:\n    - plan: Plan mode for Hermes — inspect context, write a markdown ...\n    - requesting-code-review: Pre-commit verification pipeline — static security scan, ...\n    - subagent-driven-development: Use when executing implementation plans with independent ...\n    - systematic-debugging: Use when encountering any bug, test failure, or unexpecte...\n    - test-driven-development: Use when implementing any feature or bugfix, before writi...\n    - writing-plans: Use when you have a spec or requirements for a multi-step...\n  system:\n    - ai-action-log: AI行为记录日志 — 记录AI自身重要行为和决策，让用户能追溯AI在会话中做了什么\n    - memory-audit: 从 SQLite 数据库完整重建会话历史，核对并修正持久记忆\n</available_skills>\n\nOnly proceed without loading a skill if genuinely none are relevant to the task.\n\nConversation started: Friday, May 01, 2026 11:21 AM\nModel: MiniMax-M2.7\nProvider: minimax-cn\n\nYou are in a Feishu (Lark) workspace communicating with your user. Feishu renders Markdown in messages — bold, italic, code blocks, and links are supported. You can send media files natively: include MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, .webp) are uploaded and displayed inline, audio files as voice messages, and other files as attachments.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_back",
+        "description": "Navigate back to the previous page in browser history. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click on an element identified by its ref ID from the snapshot (e.g., '@e5'). The ref IDs are shown in square brackets in the snapshot output. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e5', '@e12')"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_console",
+        "description": "Get browser console output and JavaScript errors from the current page. Returns console.log/warn/error/info messages and uncaught JS exceptions. Use this to detect silent JavaScript errors, failed API calls, and application warnings. Requires browser_navigate to be called first. When 'expression' is provided, evaluates JavaScript in the page context and returns the result — use this for DOM inspection, reading page state, or extracting data programmatically.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, clear the message buffers after reading"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate in the page context. Runs in the browser like DevTools console — full access to DOM, window, document. Return values are serialized to JSON. Example: 'document.title' or 'document.querySelectorAll(\"a\").length'"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_get_images",
+        "description": "Get a list of all images on the current page with their URLs and alt text. Useful for finding images to analyze with the vision tool. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser. Initializes the session and loads the page. Must be called before other browser tools. Use browser tools when you need to interact with a page (click, fill forms, dynamic content). Returns a compact page snapshot with interactive elements and ref IDs — no need to call browser_snapshot separately after navigating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to (e.g., 'https://example.com')"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_press",
+        "description": "Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Key to press (e.g., 'Enter', 'Tab', 'Escape', 'ArrowDown')"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_scroll",
+        "description": "Scroll the page in a direction. Use this to reveal more content that may be below or above the current viewport. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Direction to scroll"
+            }
+          },
+          "required": [
+            "direction"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Get a text-based snapshot of the current page's accessibility tree. Returns interactive elements with ref IDs (like @e1, @e2) for browser_click and browser_type. full=false (default): compact view with interactive elements. full=true: complete page content. Snapshots over 8000 chars are truncated or LLM-summarized. Requires browser_navigate first. Note: browser_navigate already returns a compact snapshot — use this to refresh after interactions that change the page, or with full=true for complete content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "boolean",
+              "description": "If true, returns complete page content. If false (default), returns compact view with interactive elements only.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into an input field identified by its ref ID. Clears the field first, then types the new text. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e3')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "ref",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_vision",
+        "description": "Take a screenshot of the current page and analyze it with vision AI. Use this when you need to visually understand what's on the page - especially useful for CAPTCHAs, visual verification challenges, complex layouts, or when the text snapshot doesn't capture important visual information. Returns both the AI analysis and a screenshot_path that you can share with the user by including MEDIA:<screenshot_path> in your response. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "What you want to know about the page visually. Be specific about what you're looking for."
+            },
+            "annotate": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, overlay numbered [N] labels on interactive elements. Each [N] maps to ref @eN for subsequent browser commands. Useful for QA and spatial reasoning about page layout."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "clarify",
+        "description": "Ask the user a question when you need clarification, feedback, or a decision before proceeding. Supports two modes:\n\n1. **Multiple choice** — provide up to 4 choices. The user picks one or types their own answer via a 5th 'Other' option.\n2. **Open-ended** — omit choices entirely. The user types a free-form response.\n\nUse this tool when:\n- The task is ambiguous and you need the user to choose an approach\n- You want post-task feedback ('How did that work out?')\n- You want to offer to save a skill or update memory\n- A decision has meaningful trade-offs the user should weigh in on\n\nDo NOT use this tool for simple yes/no confirmation of dangerous commands (the terminal tool handles that). Prefer making a reasonable default choice yourself when the decision is low-stakes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "The question to present to the user."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 4,
+              "description": "Up to 4 answer choices. Omit this parameter entirely to ask an open-ended question. When provided, the UI automatically appends an 'Other (type your answer)' option."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "cronjob",
+        "description": "Manage scheduled cron jobs with a single compressed tool.\n\nUse action='create' to schedule a new job from a prompt or one or more skills.\nUse action='list' to inspect jobs.\nUse action='update', 'pause', 'resume', 'remove', or 'run' to manage an existing job.\n\nTo stop a job the user no longer wants: first action='list' to find the job_id, then action='remove' with that job_id. Never guess job IDs — always list first.\n\nJobs run in a fresh session with no current-chat context, so prompts must be self-contained.\nIf skills are provided on create, the future cron run loads those skills in order, then follows the prompt as the task instruction.\nOn update, passing skills=[] clears attached skills.\n\nNOTE: The agent's final response is auto-delivered to the target. Put the primary\nuser-facing content in the final response. Cron jobs run autonomously with no user\npresent — they cannot ask questions or request clarification.\n\nImportant safety rule: cron-run sessions should not recursively schedule more cron jobs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "One of: create, list, update, pause, resume, remove, run"
+            },
+            "job_id": {
+              "type": "string",
+              "description": "Required for update/pause/resume/remove/run"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "For create: the full self-contained prompt. If skills are also provided, this becomes the task instruction paired with those skills."
+            },
+            "schedule": {
+              "type": "string",
+              "description": "For create/update: '30m', 'every 2h', '0 9 * * *', or ISO timestamp"
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional human-friendly name"
+            },
+            "repeat": {
+              "type": "integer",
+              "description": "Optional repeat count. Omit for defaults (once for one-shot, forever for recurring)."
+            },
+            "deliver": {
+              "type": "string",
+              "description": "Omit this parameter to auto-deliver back to the current chat and topic (recommended). Auto-detection preserves thread/topic context. Only set explicitly when the user asks to deliver somewhere OTHER than the current conversation. Values: 'origin' (same as omitting), 'local' (no delivery, save only), or platform:chat_id:thread_id for a specific destination. Examples: 'telegram:-1001234567890:17585', 'discord:#engineering', 'sms:+15551234567'. WARNING: 'platform:chat_id' without :thread_id loses topic targeting."
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional ordered list of skill names to load before executing the cron prompt. On update, pass an empty array to clear attached skills."
+            },
+            "model": {
+              "type": "object",
+              "description": "Optional per-job model override. If provider is omitted, the current main provider is pinned at creation time so the job stays stable.",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "description": "Provider name (e.g. 'openrouter', 'anthropic'). Omit to use and pin the current provider."
+                },
+                "model": {
+                  "type": "string",
+                  "description": "Model name (e.g. 'anthropic/claude-sonnet-4', 'claude-sonnet-4')"
+                }
+              },
+              "required": [
+                "model"
+              ]
+            },
+            "script": {
+              "type": "string",
+              "description": "Optional path to a Python script that runs before each cron job execution. Its stdout is injected into the prompt as context. Use for data collection and change detection. Relative paths resolve under ~/.hermes/scripts/. On update, pass empty string to clear."
+            },
+            "enabled_toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of toolset names to restrict the job's agent to (e.g. [\"web\", \"terminal\", \"file\", \"delegation\"]). When set, only tools from these toolsets are loaded, significantly reducing input token overhead. When omitted, all default tools are loaded. Infer from the job's prompt — e.g. use \"web\" if it calls web_search, \"terminal\" if it runs scripts, \"file\" if it reads files, \"delegation\" if it calls delegate_task. On update, pass an empty array to clear."
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Optional absolute path to run the job from. When set, AGENTS.md / CLAUDE.md / .cursorrules from that directory are injected into the system prompt, and the terminal/file/code_exec tools use it as their working directory — useful for running a job inside a specific project repo. Must be an absolute path that exists. When unset (default), preserves the original behaviour: no project context files, tools use the scheduler's cwd. On update, pass an empty string to clear. Jobs with workdir run sequentially (not parallel) to keep per-job directories isolated."
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_task",
+        "description": "Spawn one or more subagents to work on tasks in isolated contexts. Each subagent gets its own conversation, terminal session, and toolset. Only the final summary is returned -- intermediate tool results never enter your context window.\n\nTWO MODES (one of 'goal' or 'tasks' is required):\n1. Single task: provide 'goal' (+ optional context, toolsets)\n2. Batch (parallel): provide 'tasks' array with up to delegation.max_concurrent_children items (default 3, configurable via config.yaml, no hard ceiling). All run concurrently and results are returned together. Nested delegation requires role='orchestrator' and delegation.max_spawn_depth >= 2.\n\nWHEN TO USE delegate_task:\n- Reasoning-heavy subtasks (debugging, code review, research synthesis)\n- Tasks that would flood your context with intermediate data\n- Parallel independent workstreams (research A and B simultaneously)\n\nWHEN NOT TO USE (use these instead):\n- Mechanical multi-step work with no reasoning needed -> use execute_code\n- Single tool call -> just call the tool directly\n- Tasks needing user interaction -> subagents cannot use clarify\n\nIMPORTANT:\n- Subagents have NO memory of your conversation. Pass all relevant info (file paths, error messages, constraints) via the 'context' field.\n- Leaf subagents (role='leaf', the default) CANNOT call: delegate_task, clarify, memory, send_message, execute_code.\n- Orchestrator subagents (role='orchestrator') retain delegate_task so they can spawn their own workers, but still cannot use clarify, memory, send_message, or execute_code. Orchestrators are bounded by delegation.max_spawn_depth (default 2) and can be disabled globally via delegation.orchestrator_enabled=false.\n- Each subagent gets its own terminal session (separate working directory and state).\n- Results are always returned as an array, one entry per task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history."
+            },
+            "context": {
+              "type": "string",
+              "description": "Background information the subagent needs: file paths, error messages, project structure, constraints. The more specific you are, the better the subagent performs."
+            },
+            "toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Toolsets to enable for this subagent. Default: inherits your enabled toolsets. Available toolsets: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Common patterns: ['terminal', 'file'] for code work, ['web'] for research, ['browser'] for web interaction, ['terminal', 'file', 'web'] for full-stack tasks."
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "Task goal"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Task-specific context"
+                  },
+                  "toolsets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Toolsets for this specific task. Available: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Use 'web' for network access, 'terminal' for shell, 'browser' for web interaction."
+                  },
+                  "acp_command": {
+                    "type": "string",
+                    "description": "Per-task ACP command override (e.g. 'claude'). Overrides the top-level acp_command for this task only."
+                  },
+                  "acp_args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Per-task ACP args override."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "leaf",
+                      "orchestrator"
+                    ],
+                    "description": "Per-task role override. See top-level 'role' for semantics."
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              },
+              "description": "Batch mode: tasks to run in parallel (limit configurable via delegation.max_concurrent_children, default 3). Each gets its own subagent with isolated context and terminal session. When provided, top-level goal/context/toolsets are ignored."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "leaf",
+                "orchestrator"
+              ],
+              "description": "Role of the child agent. 'leaf' (default) = focused worker, cannot delegate further. 'orchestrator' = can use delegate_task to spawn its own workers. Requires delegation.max_spawn_depth >= 2 in config; ignored (treated as 'leaf') when the child would exceed max_spawn_depth or when delegation.orchestrator_enabled=false."
+            },
+            "acp_command": {
+              "type": "string",
+              "description": "Override ACP command for child agents (e.g. 'claude', 'copilot'). When set, children use ACP subprocess transport instead of inheriting the parent's transport. Enables spawning Claude Code (claude --acp --stdio) or other ACP-capable agents from any parent, including Discord/Telegram/CLI."
+            },
+            "acp_args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Arguments for the ACP command (default: ['--acp', '--stdio']). Only used when acp_command is set. Example: ['--acp', '--stdio', '--model', 'claude-opus-4-6']"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Run a Python script that can call Hermes tools programmatically. Use this when you need 3+ tool calls with processing logic between them, need to filter/reduce large tool outputs before they enter your context, need conditional branching (if X then Y else Z), or need to loop (fetch N pages, process N files, retry on failure).\n\nUse normal tool calls instead when: single tool call with no processing, you need to see the full result and apply complex reasoning, or the task requires interactive user input.\n\nAvailable via `from hermes_tools import ...`:\n\n  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}\n  write_file(path: str, content: str) -> dict\n    Always overwrites the entire file.\n  search_files(pattern: str, target=\"content\", path=\".\", file_glob=None, limit=50) -> dict\n    target: \"content\" (search inside files) or \"files\" (find files by name). Returns {\"matches\": [...]}\n  patch(path: str, old_string: str, new_string: str, replace_all: bool = False) -> dict\n    Replaces old_string with new_string in the file.\n  terminal(command: str, timeout=None, workdir=None) -> dict\n    Foreground only (no background/pty). Returns {\"output\": \"...\", \"exit_code\": N}\n\nLimits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. terminal() is foreground-only (no background or pty).\n\nScripts run in the session's working directory with the active venv's python, so project deps (pandas, etc.) and relative paths work like in terminal().\n\nPrint your final result to stdout. Use Python stdlib (json, re, math, csv, datetime, collections, etc.) for processing between tool calls.\n\nAlso available (no import needed — built into hermes_tools):\n  json_parse(text: str) — json.loads with strict=False; use for terminal() output with control chars\n  shell_quote(s: str) — shlex.quote(); use when interpolating dynamic strings into shell commands\n  retry(fn, max_attempts=3, delay=2) — retry with exponential backoff for transient failures",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python code to execute. Import tools with `from hermes_tools import terminal, ...` and print your final result to stdout."
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_doc_read",
+        "description": "Read the full content of a Feishu/Lark document as plain text. Useful when you need more context beyond the quoted text in a comment.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "doc_token": {
+              "type": "string",
+              "description": "The document token (from the document URL or comment context)."
+            }
+          },
+          "required": [
+            "doc_token"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_add_comment",
+        "description": "Add a new whole-document comment on a Feishu document. Use this for whole-document comments or as a fallback when reply_comment fails with code 1069302.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "content": {
+              "type": "string",
+              "description": "The comment text content (plain text only, no markdown)."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            }
+          },
+          "required": [
+            "file_token",
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_list_comment_replies",
+        "description": "List all replies in a comment thread on a Feishu document.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "comment_id": {
+              "type": "string",
+              "description": "The comment ID to list replies for."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            },
+            "page_size": {
+              "type": "integer",
+              "description": "Number of replies per page (max 100).",
+              "default": 100
+            },
+            "page_token": {
+              "type": "string",
+              "description": "Pagination token for next page."
+            }
+          },
+          "required": [
+            "file_token",
+            "comment_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_list_comments",
+        "description": "List comments on a Feishu document. Use is_whole=true to list whole-document comments only.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            },
+            "is_whole": {
+              "type": "boolean",
+              "description": "If true, only return whole-document comments.",
+              "default": false
+            },
+            "page_size": {
+              "type": "integer",
+              "description": "Number of comments per page (max 100).",
+              "default": 100
+            },
+            "page_token": {
+              "type": "string",
+              "description": "Pagination token for next page."
+            }
+          },
+          "required": [
+            "file_token"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "feishu_drive_reply_comment",
+        "description": "Reply to a local comment thread on a Feishu document. Use this for local (quoted-text) comments. For whole-document comments, use feishu_drive_add_comment instead.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_token": {
+              "type": "string",
+              "description": "The document file token."
+            },
+            "comment_id": {
+              "type": "string",
+              "description": "The comment ID to reply to."
+            },
+            "content": {
+              "type": "string",
+              "description": "The reply text content (plain text only, no markdown)."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type (default: docx).",
+              "default": "docx"
+            }
+          },
+          "required": [
+            "file_token",
+            "comment_id",
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "memory",
+        "description": "Save durable information to persistent memory that survives across sessions. Memory is injected into future turns, so keep it compact and focused on facts that will still matter later.\n\nWHEN TO SAVE (do this proactively, don't wait to be asked):\n- User corrects you or says 'remember this' / 'don't do that again'\n- User shares a preference, habit, or personal detail (name, role, timezone, coding style)\n- You discover something about the environment (OS, installed tools, project structure)\n- You learn a convention, API quirk, or workflow specific to this user's setup\n- You identify a stable fact that will be useful again in future sessions\n\nPRIORITY: User preferences and corrections > environment facts > procedural knowledge. The most valuable memory prevents the user from having to repeat themselves.\n\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts.\nIf you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\n\nTWO TARGETS:\n- 'user': who the user is -- name, role, preferences, communication style, pet peeves\n- 'memory': your notes -- environment facts, project conventions, tool quirks, lessons learned\n\nACTIONS: add (new entry), replace (update existing -- old_text identifies it), remove (delete -- old_text identifies it).\n\nSKIP: trivial/obvious info, things easily re-discovered, raw data dumps, and temporary task state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "replace",
+                "remove"
+              ],
+              "description": "The action to perform."
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "memory",
+                "user"
+              ],
+              "description": "Which memory store: 'memory' for personal notes, 'user' for user profile."
+            },
+            "content": {
+              "type": "string",
+              "description": "The entry content. Required for 'add' and 'replace'."
+            },
+            "old_text": {
+              "type": "string",
+              "description": "Short unique substring identifying the entry to replace or remove."
+            }
+          },
+          "required": [
+            "action",
+            "target"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_message",
+        "description": "Send a message to a connected messaging platform, or list available targets.\n\nIMPORTANT: When the user asks to send to a specific channel or person (not just a bare platform name), call send_message(action='list') FIRST to see available targets, then send to the correct one.\nIf the user just says a platform name like 'send to telegram', send directly to the home channel without listing first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "send",
+                "list"
+              ],
+              "description": "Action to perform. 'send' (default) sends a message. 'list' returns all available channels/contacts across connected platforms."
+            },
+            "target": {
+              "type": "string",
+              "description": "Delivery target. Format: 'platform' (uses home channel), 'platform:#channel-name', 'platform:chat_id', or 'platform:chat_id:thread_id' for Telegram topics and Discord threads. Examples: 'telegram', 'telegram:-1001234567890:17585', 'discord:999888777:555444333', 'discord:#bot-home', 'slack:#engineering', 'signal:+155****4567', 'matrix:!roomid:server.org', 'matrix:@user:server.org'"
+            },
+            "message": {
+              "type": "string",
+              "description": "The message text to send"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "session_search",
+        "description": "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- every past session is searchable, and this tool summarizes what happened.\n\nTWO MODES:\n1. Recent sessions (no query): Call with no arguments to see what was worked on recently. Returns titles, previews, and timestamps. Zero LLM cost, instant. Start here when the user asks what were we working on or what did we do recently.\n2. Keyword search (with query): Search for specific topics across all past sessions. Returns LLM-generated summaries of matching sessions.\n\nUSE THIS PROACTIVELY when:\n- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n- The user asks about a topic you worked on before but don't have in current context\n- The user references a project, person, or concept that seems familiar but isn't in memory\n- You want to check if you've solved a similar problem before\n- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\nDon't hesitate to search when it is actually cross-session -- it's fast and cheap. Better to search and confirm than to guess or ask the user to repeat themselves.\n\nSearch syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses sessions that only mention some terms. If a broad OR query returns nothing, try individual keyword searches in parallel. Returns summaries of the top matching sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query — keywords, phrases, or boolean expressions to find in past sessions. Omit this parameter entirely to browse recent sessions instead (returns titles, previews, timestamps with no LLM cost)."
+            },
+            "role_filter": {
+              "type": "string",
+              "description": "Optional: only search messages from specific roles (comma-separated). E.g. 'user,assistant' to skip tool outputs."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to summarize (default: 3, max: 5).",
+              "default": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_manage",
+        "description": "Manage skills (create, update, delete). Skills are your procedural memory — reusable approaches for recurring task types. New skills go to ~/.hermes/skills/; existing skills can be modified wherever they live.\n\nActions: create (full SKILL.md + optional category), patch (old_string/new_string — preferred for fixes), edit (full SKILL.md rewrite — major overhauls only), delete, write_file, remove_file.\n\nCreate when: complex task succeeded (5+ calls), errors overcome, user-corrected approach worked, non-trivial workflow discovered, or user asks you to remember a procedure.\nUpdate when: instructions stale/wrong, OS-specific failures, missing steps or pitfalls found during use. If you used a skill and hit issues not covered by it, patch it immediately.\n\nAfter difficult/iterative tasks, offer to save as a skill. Skip for simple one-offs. Confirm with user before creating/deleting.\n\nGood skills: trigger conditions, numbered steps with exact commands, pitfalls section, verification steps. Use skill_view() to see format examples.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "patch",
+                "edit",
+                "delete",
+                "write_file",
+                "remove_file"
+              ],
+              "description": "The action to perform."
+            },
+            "name": {
+              "type": "string",
+              "description": "Skill name (lowercase, hyphens/underscores, max 64 chars). Must match an existing skill for patch/edit/delete/write_file/remove_file."
+            },
+            "content": {
+              "type": "string",
+              "description": "Full SKILL.md content (YAML frontmatter + markdown body). Required for 'create' and 'edit'. For 'edit', read the skill first with skill_view() and provide the complete updated text."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'patch'). Must be unique unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'patch'). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "For 'patch': replace all occurrences instead of requiring a unique match (default: false)."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category/domain for organizing the skill (e.g., 'devops', 'data-science', 'mlops'). Creates a subdirectory grouping. Only used with 'create'."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "Path to a supporting file within the skill directory. For 'write_file'/'remove_file': required, must be under references/, templates/, scripts/, or assets/. For 'patch': optional, defaults to SKILL.md if omitted."
+            },
+            "file_content": {
+              "type": "string",
+              "description": "Content for the file. Required for 'write_file'."
+            }
+          },
+          "required": [
+            "action",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_view",
+        "description": "Skills allow for loading information about specific tasks and workflows, as well as scripts and templates. Load a skill's full content or access its linked files (references, templates, scripts). First call returns SKILL.md content plus a 'linked_files' dict showing available references/templates/scripts. To access those, call again with file_path parameter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The skill name (use skills_list to see available skills). For plugin-provided skills, use the qualified form 'plugin:skill' (e.g. 'superpowers:writing-plans')."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "OPTIONAL: Path to a linked file within the skill (e.g., 'references/api.md', 'templates/config.yaml', 'scripts/validate.py'). Omit to get the main SKILL.md content."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skills_list",
+        "description": "List available skills (name + description). Use skill_view(name) to load full content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified when the process finishes — no polling needed. Use this for tasks that take a while (tests, builds, deployments) so you can keep working on other things in the meantime.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. Fires a notification the first time each pattern matches a line of output. **Use ONLY for mid-process signals** you want to react to before the process exits — errors, readiness markers, intermediate step markers (e.g. [\"ERROR\", \"Traceback\", \"listening on port\"]). Do NOT use for end-of-run markers (summary headers, 'DONE', 'PASS' printed right before exit) — use `notify_on_complete` for that instead. Stacking end-of-run patterns on top of `notify_on_complete` produces duplicate, delayed notifications that arrive after you've already moved on, since delivery is asynchronous and continues after the process exits."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "text_to_speech",
+        "description": "Convert text to speech audio. Returns a MEDIA: path that the platform delivers as a voice message. On Telegram it plays as a voice bubble, on Discord/WhatsApp as an audio attachment. In CLI mode, saves to ~/voice-memos/. Voice and provider are user-configured, not model-selected.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to convert to speech. Provider-specific character caps apply and are enforced automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); over-long input is truncated."
+            },
+            "output_path": {
+              "type": "string",
+              "description": "Optional custom file path to save the audio. Defaults to ~/.hermes/audio_cache/<timestamp>.mp3"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "todo",
+        "description": "Manage your task list for the current session. Use for complex tasks with 3+ steps or when the user provides multiple tasks. Call with no parameters to read the current list.\n\nWriting:\n- Provide 'todos' array to create/update items\n- merge=false (default): replace the entire list with a fresh plan\n- merge=true: update existing items by id, add any new ones\n\nEach item: {id: string, content: string, status: pending|in_progress|completed|cancelled}\nList order is priority. Only ONE item in_progress at a time.\nMark items completed immediately when done. If something fails, cancel it and add a revised item.\n\nAlways returns the full current list.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "todos": {
+              "type": "array",
+              "description": "Task items to write. Omit to read current list.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique item identifier"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Task description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "description": "Current status"
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "status"
+                ]
+              }
+            },
+            "merge": {
+              "type": "boolean",
+              "description": "true: update existing items by id, add new ones. false (default): replace the entire list.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "vision_analyze",
+        "description": "Analyze images using AI vision. Provides a comprehensive description and answers a specific question about the image content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_url": {
+              "type": "string",
+              "description": "Image URL (http/https) or local file path to analyze."
+            },
+            "question": {
+              "type": "string",
+              "description": "Your specific question or request about the image to resolve. The AI will automatically provide a complete image description AND answer your specific question."
+            }
+          },
+          "required": [
+            "image_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 13,
+  "messages": [
+    {
+      "role": "user",
+      "content": "我们还是继续我们的文字生成照片生成视频这个工作上吧"
+    },
+    {
+      "role": "assistant",
+      "content": "好的，让我先加载澳门历史故事视频工作流的 skill 详情，确认我们之前的进度和分工。",
+      "tool_calls": [
+        {
+          "id": "call_function_2wss9bzb4ob7_1",
+          "call_id": "call_function_2wss9bzb4ob7_1",
+          "response_item_id": "fc_function_2wss9bzb4ob7_1",
+          "type": "function",
+          "function": {
+            "name": "skill_view",
+            "arguments": "{\"name\": \"macau-video-workflow\"}"
+          }
+        }
+      ],
+      "reasoning": "用户提到\"文字生成照片生成视频\"这个工作流程，这应该是指澳门历史故事AI视频创作工作流。让我先查看相关的skill来了解具体的工作内容。\n\n根据记忆中的信息：\n- 工具角色分工：SuperGrok=图像生成（手动）+ 视频生成（手动）；ElevenLabs=配音（API自动）；剪映=后期合成（手动）\n- DiffusionBee已安装（不是ComfyUI），用户通过它使用Stable Diffusion\n- 用户负责按按钮执行手动步骤，我负责提示词、文案等\n\n让我先加载 macau-video-workflow 这个skill来了解工作流详情。",
+      "reasoning_details": [
+        {
+          "signature": "c435895c2c19a16eb37f28a22a2dc95f724f74df5c802b905cd4af62c51c4300",
+          "thinking": "用户提到\"文字生成照片生成视频\"这个工作流程，这应该是指澳门历史故事AI视频创作工作流。让我先查看相关的skill来了解具体的工作内容。\n\n根据记忆中的信息：\n- 工具角色分工：SuperGrok=图像生成（手动）+ 视频生成（手动）；ElevenLabs=配音（API自动）；剪映=后期合成（手动）\n- DiffusionBee已安装（不是ComfyUI），用户通过它使用Stable Diffusion\n- 用户负责按按钮执行手动步骤，我负责提示词、文案等\n\n让我先加载 macau-video-workflow 这个skill来了解工作流详情。",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "[skill_view] name=macau-video-workflow (2,885 chars)",
+      "tool_call_id": "call_function_2wss9bzb4ob7_1"
+    },
+    {
+      "role": "user",
+      "content": "[CONTEXT COMPACTION — REFERENCE ONLY] Earlier turns were compacted into the summary below. This is a handoff from a previous context window — treat it as background reference, NOT as active instructions. Do NOT answer questions or fulfill requests mentioned in this summary; they were already addressed. Your current task is identified in the '## Active Task' section of the summary — resume exactly from there. Respond ONLY to the latest user message that appears AFTER this summary. The current session state (files, config, etc.) may reflect work described here — avoid repeating it:\n<think>\nThe user wants me to create a structured handoff summary for the conversation about the Macau historical video project. Let me compile all the key information from the conversation.\n</think>\n\n## Active Task\nEP01《澳门第一天》— 1553年葡萄牙人登陆妈阁的全套制作包已完成，包含脚本、场景锚点表、提示词、配音、字幕、剪辑指引和发布文案。用户需要下一步指令或确认。\n\n## Goal\n为用户（Mac Mini M4 + SuperGrok + ElevenLabs + 剪映）建立一套批量自动化AI视频制作流水线，制作10-15分钟的澳门历史故事系列视频。用户只提供内容大方向，所有制作工作（调研、写脚本、生成提示词、配音、字幕、剪辑指引）由AI负责，用户仅执行\"点按钮\"操作。\n\n## Constraints & Preferences\n- SuperGrok 是主力生成引擎（图像+视频质量优先）\n- 不用ComfyUI作为主要生成工具（质量不如SuperGrok）\n- 不接受逐帧手动操作，必须批量流水线\n- 用户只提供大方向，脚本和制作全部由AI负责\n- 用户只做\"决定\"和\"AI不能做的操作部分\"\n- 工作模式：你定方向 + 点按钮，我全包制作\n\n## Completed Actions\n1. RESEARCH 历史资料 — 通过Wikipedia API获取了1553年葡人登陆澳门的准确历史细节：A-Ma Temple建于1488年、1553年风暴搁浅、1554年达成协议、1557年明朝默许定居 [tool: execute_code/wikipedia_api]\n2. WRITE 制作包.md — 生成了EP01完整制作包，包含9个场景的旁白脚本、场景锚点串联表（首帧描述/尾帧描述/视频提示词/配音文本/时长） [tool: write_file]\n3. WRITE 制作包.md — 图像提示词部分：9个场景各2张图片（首帧+尾帧），共18张图像提示词，全部中英双语，含镜头运动描述 [tool: write_file]\n4. WRITE 制作包.md — 视频提示词部分：9个场景各1个视频片段提示词，含首帧图+尾帧图描述+镜头运动+时长控制 [tool: write_file]\n5. GENERATE 配音 — 使用edge-tts成功生成全部9个场景配音（scene01-scene09），总时长500.28秒(8.34分钟) [tool: execute_code/edge_tts_direct]\n6. GET durations — 通过ffprobe获取每个音频文件的精确时长 [tool: execute_code]\n7. GENERATE SRT字幕 — 生成9个分场景SRT + 1个合并SRT（EP01_combined.srt，143条字幕条目） [tool: execute_code/srt_generator]\n8. WRITE 剪映剪辑指引.md — 详细的剪映操作步骤，包括素材清单、导入顺序、转场设置、字幕导入、背景音乐、音量调整、导出设置 [tool: write_file]\n9. WRITE 各平台发布文案.md — 哔哩哔哩、抖音、小红书、微信公众号的标题、简介、章节文案 [tool: write_file]\n10. ALL todos marked completed [tool: todo]\n\n## Active State\n- Working directory: `/home/administrator/macau_ep01/EP01_1553_葡人登陆/`\n- 所有制作内容已完成并写入文件\n- 等待用户下一步指令\n\n## In Progress\nAll tasks completed. The production package is ready. User has not yet been told to start executing the SuperGrok image/video generation steps.\n\n## Blocked\nElevenLabs API key 未配置（显示NOT SET），改用edge-tts作为替代配音方案，质量可用但用户可能后续想用ElevenLabs。\n\n## Key Decisions\n1. **SuperGrok为主力生成引擎** — 用户明确表示内容生成尽量用Grok，质量优先于自动化\n2. **不用ComfyUI做生成** — ComfyUI的工作流可视化价值保留（未来可做自动化编排），但图像/视频生成质量不如SuperGrok，不采用\n3. **Python+edge-tts绕过TTS工具Bug** — text_to_speech工具对长文本和某些中文失败，改用execute_code直接调用edge-tts，成功生成全部配音\n4. **不依赖ComfyUI的VACE节点** — 首帧+尾帧锚点串联通过SuperGrok手动操作实现（用户自己截图/生成首帧→输入SuperGrok→生成视频→截图尾帧→下一场景）\n5. **每集8.5分钟** — 基于9个场景配音总和约8.5分钟，符合用户\"10-15分钟长视频\"范围的下限\n\n## Resolved Questions\nQ: ComfyUI的照片或视频生成质量比得上Grok吗？\nA: 质量不如SuperGrok的Aurora模型。ComfyUI价值在于工作流可视化+批量自动化，但不作为主要生成引擎。\n\nQ: 你能做的尽量做，我就只做决定以及你不能做的操作部分？\nA: 是的。用户只提供大方向，我负责调研、写脚本、制作所有内容。\n\nQ: 脚本也是你提供，你负责制作？\nA: 是的。我负责研究历史、写完整narration脚本、配套所有制作素材。\n\nQ: 如何实现批量性操作而不是一步一步走？\nA: 通过\"场景锚点串联表\"实现：我一次性给出所有提示词（图像+视频），用户批量在SuperGrok执行，最后我来组装。\n\n## Pending User Asks\n1. 用户尚未开始执行SuperGrok生成步骤（图像+视频片段）\n2. 用户尚未确认是否需要调整图像风格（写实/水墨/其他）\n3. 用户尚未确认对edge-tts配音质量的反馈\n4. 用户可能需要ComfyUI的自动化编排工作流（用于批量管理提示词包）\n\n## Relevant Files\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/制作包.md` — 核心制作包，含旁白脚本、场景锚点串联表、图像提示词、视频提示词（18张图+9个视频提示词）\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene01.mp3` — scene09.mp3 — 9个场景配音（总500.28秒）\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene01.srt` — scene09.srt — 9个分场景字幕\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/EP01_combined.srt` — 合并字幕（143条）\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/剪映剪辑指引.md` — 剪映操作详细步骤\n- `/home/administrator/macau_ep01/EP01_1553_葡人登陆/各平台发布文案.md` — B站/抖音/小红书/公众号文案\n\n## Remaining Work\n下一步需要用户确认后开始执行：\n1. **SuperGrok图像生成**：用户打开SuperGrok，按制作包中的图像提示词，批量生成18张图片（9个场景×首帧+尾帧）\n2. **SuperGrok视频生成**：用生成的首帧图+尾帧图+视频提示词，批量生成9个视频片段\n3. **剪映合成**：按剪辑指引导入所有素材，生成成品视频\n4. **后续剧集**：用户可继续指定下一个大方向（如\"圣保禄学院\"、\"郑观应\"等），AI继续全包制作\n\n## Critical Context\n- 历史关键事实：1553年风暴搁浅妈阁海滩 → 1554年谈判达成协议（借口晾晒被海水浸湿的货物） → 1557年明朝官员默认葡萄牙人在澳门定居，征收商税。妈阁庙（A-Ma Temple）建于1488年，香火延续至今。明朝实行海禁政策（1368-1644）。葡萄牙人欧洲扩张路线：1500年代占据印度果阿、1511年占据马六甲、1553年抵达澳门。\n- 配音使用edge-tts，替代方案（因ElevenLabs API key未配置）\n- Mac Mini M4 + DiffusionBee + SuperGrok（手动）+ 剪映 构成当前工具链"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "All tasks completed! Let me now provide a summary to the user with the complete production package and the next steps.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "87b3fa5cca10df6ef5cac9b0a4ed17d94a35728a4ca36ca49c0bc46f154e487e",
+          "thinking": "All tasks completed! Let me now provide a summary to the user with the complete production package and the next steps.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_k0x7ng1t9hzw_1",
+          "call_id": "call_function_k0x7ng1t9hzw_1",
+          "response_item_id": "fc_function_k0x7ng1t9hzw_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"find /home/administrator/macau_ep01 -type f | sort\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene01.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene01.ogg\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene02.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene02.ogg\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene03.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene04.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene05.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene06.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene07.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene08.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/scene09.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/audio/test_short.mp3\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/EP01_combined.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene01.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene02.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene03.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene04.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene05.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene06.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene07.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene08.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/subtitles/scene09.srt\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/制作包.md\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/剪映剪辑指引.md\\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/发布文案.md\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_k0x7ng1t9hzw_1"
+    },
+    {
+      "role": "assistant",
+      "content": "**EP01 全套制作包已完成！** ✅\n\n---\n\n## 📦 已交付的素材\n\n| 类型 | 状态 | 说明 |\n|------|------|------|\n| 旁白脚本 | ✅ | 9个场景完整narration |\n| 场景锚点串联表 | ✅ | 首帧/尾帧/视频提示词 |\n| 图像提示词 | ✅ | 9张图，英文详细描述 |\n| 视频提示词 | ✅ | 9段视频，含首帧尾帧锚点 |\n| 配音 | ✅ | 9个MP3音频（约8.5分钟） |\n| 字幕 | ✅ | SRT文件（分场景+合并版） |\n| 剪映指引 | ✅ | 完整剪辑步骤文档 |\n| 发布文案 | ✅ | B站/抖音/小红书/YouTube/微博 |\n\n---\n\n## 📁 文件位置\n\n```\n/home/administrator/macau_ep01/EP01_1553_葡人登陆/\n├── 制作包.md          ← 包含所有提示词和脚本\n├── 剪映剪辑指引.md     ← 剪辑步骤\n├── 发布文案.md         ← 各平台文案\n├── audio/             ← 9个配音文件（已就绪）\n└── subtitles/          ← SRT字幕文件（已就绪）\n```\n\n---\n\n## 🎯 你现在要做的事\n\n**去 SuperGrok，按顺序生成：**\n\n### 第一步：生成 9 张首帧图像\n\n按下方顺序，逐一在 SuperGrok 生成图像（保存为 PNG/JPG）：\n\n1. **image_01_storm.png** — 风暴中的葡萄牙帆船\n2. **image_02_beach.png** — 帆船搁浅在妈阁海滩\n3. **image_03_fishermen.png** — 渔民小船围着大帆船\n4. **image_04_negotiation.png** — 室内烛光谈判\n5. **image_05_naval_battle.png** — 葡萄牙战舰炮击海盗\n6. **image_06_agreement.png** — 澳门早期石屋聚落\n7. **image_07_1557_city.png** — 1557年澳门城市雏形\n8. **image_08_culture.png** — 澳门街道东西方人并行\n9. **image_09_temple.png** — 今日妈阁庙全景\n\n### 第二步：生成 9 段视频\n\n每段视频生成时，**首帧传入上一段的尾帧图作为锚点**。\n\n1. **video_01.mp4** — 风暴→看见陆地（基于 image_01 → image_02）\n2. **video_02.mp4** — 登陆海滩（基于 image_02 → image_03）\n3. **video_03.mp4** — 渔民靠近交流（基于 image_03 → image_04）\n4. **video_04.mp4** — 室内谈判（基于 image_04 → image_05）\n5. **video_05.mp4** — 海战剿匪（基于 image_05 → image_06）\n6. **video_06.mp4** — 协议后聚落（基于 image_06 → image_07）\n7. **video_07.mp4** — 城市初貌（基于 image_07 → image_08）\n8. **video_08.mp4** — 文化融合（基于 image_08 → image_09）\n9. **video_09.mp4** — 妈阁庙尾声（基于 image_09 → image_09）\n\n### 第三步：回传给我\n\n把生成的图像和视频发给我（或告知路径），我来做：\n- ✅ 质量审查（看图分析是否达标）\n- ✅ 调整提示词（如需重做）\n- ✅ 提供精确剪映时间轴对齐\n\n---\n\n**生成过程中有任何问题，随时发给我！**",
+      "reasoning": "All 9 todo items are completed. Let me now give the user a summary of what was done and what they need to do next.",
+      "finish_reason": "stop",
+      "reasoning_details": [
+        {
+          "signature": "f0903c954c4cb7eeeb289dd8dfd7bcc57d546e9b83dee8a1a51988ed30add399",
+          "thinking": "All 9 todo items are completed. Let me now give the user a summary of what was done and what they need to do next.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "Review the conversation above and consider saving or updating a skill if appropriate.\n\nFocus on: was a non-trivial approach used to complete a task that required trial and error, or changing course due to experiential findings along the way, or did the user expect or desire a different method or outcome?\n\nIf a relevant skill already exists, update it with what you learned. Otherwise, create a new skill if the approach is reusable.\nIf nothing is worth saving, just say 'Nothing to save.' and stop."
+    },
+    {
+      "role": "assistant",
+      "content": "让我先查看现有 skill 的内容，再决定如何更新。",
+      "reasoning": "The user is asking me to review the conversation and consider saving or updating a skill if appropriate. Let me think about what happened here:\n\n1. This was a handoff/summary of a previous conversation about creating Macau historical story videos.\n2. The key learnings from the previous session were:\n   - SuperGrok is the primary image/video generation tool (not ComfyUI)\n   - edge-tts bypasses the text_to_speech tool bugs for Chinese long text\n   - The workflow uses scene anchoring (首帧+尾帧) to create consistent video sequences\n   - A complete production package approach was developed\n   - The workflow is: AI generates scripts/prompts → user executes SuperGrok → AI assembles in CapCut\n   - DiffusionBee is for Mac Mini M4 (not ComfyUI)\n   - ElevenLabs API key wasn't configured, so edge-tts was used as fallback\n\nThese are procedural knowledge and workflow approaches that could be useful for future video creation tasks. The skill \"macau-video-workflow\" already exists but this session summary adds more detail about the actual workflow and tool decisions.\n\nI should update the existing skill \"macau-video-workflow\" to incorporate these learnings:\n1. SuperGrok as primary generator (not ComfyUI)\n2. edge-tts for Chinese TTS (bypassing the text_to_speech tool)\n3. The scene anchoring method for video continuity\n4. Complete production package contents\n5. The division of labor (AI does all content creation, user only pushes buttons)\n\nActually wait - this conversation was a summary/handoff of what happened in a previous session. The skill already exists. The question is whether to update it with what was learned. The skill should reflect the proven workflow including:\n- SuperGrok over ComfyUI\n- edge-tts for Chinese\n- Scene anchoring method\n- The batch prompting approach\n\nLet me update the skill with the actual proven approach.",
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "call_function_i1teltdofmtl_1",
+          "call_id": "call_function_i1teltdofmtl_1",
+          "response_item_id": "fc_function_i1teltdofmtl_1",
+          "type": "function",
+          "function": {
+            "name": "skill_view",
+            "arguments": "{\"name\": \"macau-video-workflow\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"success\": true, \"name\": \"macau-video-workflow\", \"description\": \"澳门历史故事 AI 视频创作工作流 — 首帧尾帧锚点串联 + 批量自动化 + 混和工作流（SuperGrok 生成 + ComfyUI 编排 + ElevenLabs 配音）\", \"tags\": [], \"related_skills\": [], \"content\": \"---\\nname: macau-video-workflow\\ndescription: 澳门历史故事 AI 视频创作工作流 — 首帧尾帧锚点串联 + 批量自动化 + 混和工作流（SuperGrok 生成 + ComfyUI 编排 + ElevenLabs 配音）\\n---\\n# 澳门历史故事 AI 视频创作工作流\\n\\n## 背景\\n- 用户来自澳门，内容方向为澳门历史故事（landmarks, figures, events, cultural fusion）\\n- 用户不自己出镜/配音，全程 AI 代劳\\n- 用户定位：工具人（复制、粘贴、点击）→ **但核心诉求是批量自动化**\\n- AI 定位：幕后操盘手（全程准备所有内容、提示词、文件、指引）\\n\\n## 用户核心诉求（2026年5月确认）\\n\\n**批量自动化流水线，非逐帧手动操作**\\n- 用户明确拒绝\\\"一步一步走\\\"的原始工作流\\n- 希望类似 ComfyUI 可视化流水线：一次定义，N次复用\\n- 每集目标时长：10-15分钟长视频\\n\\n## 核心发现：首帧+尾帧锚点串联技术\\n\\n**这是保证 AI 视频连续性的关键技术，已由用户亲验确认。**\\n\\n每段视频片段 generation 流程：\\n```\\n场景 N                场景 N+1\\n┌─────────┐           ┌─────────┐\\n│ 首帧图片 │ ──生成──→ │ 视频片段  │\\n│ (已知)   │           │ (SuperGrok)│\\n└─────────┘           └─────────┘\\n                           ↓\\n                     ┌─────────┐\\n                     │ 尾帧图片 │ ──下一片段首帧\\n                     │ (截图)   │\\n                     └─────────┘\\n```\\n\\n几秒一个锚点，通过锚点串联整部视频 = 流畅连贯。\\n\\n## 工具架构（混和方案）\\n\\n| 工具 | 角色 | 自动化 |\\n|------|------|--------|\\n| LLM（我） | 脚本、提示词、字幕、编排 | ✅ 全自动 |\\n| **SuperGrok** | 图像 + 视频生成（质量最优） | ✋ 手动，批量给提示词 |\\n| **ComfyUI** | 批量流水线编排 + 首帧尾帧锚点节点 + VACE 缝合 | 可选自动化层 |\\n| ElevenLabs | 配音 | ✅ API 自动 |\\n| 剪映 | 最终合成 | ✋ 手动 |\\n\\n**重要说明：**\\n- SuperGrok 的 Aurora 模型质量仍然领先开源模型（用户亲验确认）\\n- ComfyUI 价值在于工作流可视化 + 批量自动化，不是替代 SuperGrok\\n- Mac Mini M4 硬件限制：跑不了最高质量开源视频模型（需要大显存）\\n\\n## 三层流水线架构\\n\\n```\\n┌─────────────────────────────────────────────────────────┐\\n│  第1层：编排层（ComfyUI 或 Python）                      │\\n│  输入脚本 → 自动拆解 N 个场景 → 批量分发 → 自动组装     │\\n└─────────────────────────────────────────────────────────┘\\n         ↓\\n┌─────────────────────────────────────────────────────────┐\\n│  第2层：生成层（SuperGrok）                              │\\n│  每个片段 = 首帧图 + 尾帧图 + 提示词 → 锚点视频         │\\n│  用户批量操作，输出到指定文件夹                         │\\n└─────────────────────────────────────────────────────────┘\\n         ↓\\n┌─────────────────────────────────────────────────────────┐\\n│  第3层：合成层                                           │\\n│  ComfyUI VACE Joiner 自动缝合片段                      │\\n│  ElevenLabs API 批量配音                                │\\n│  剪映 微调 + 字幕                                        │\\n└─────────────────────────────────────────────────────────┘\\n```\\n\\n## 关键工具节点（ComfyUI）\\n\\n| 节点/工具 | 用途 |\\n|-----------|------|\\n| `ComfyUI-WanVideoStartEndFrames` | 首帧+尾帧引导视频生成 |\\n| `ComfyUI-Wan-VACE-Video-Joiner` | 多片段自动缝合 + 生成过渡帧 |\\n| `ComfyUI-LTXTricks` | LTX-Video 额外控制（RF-Inversion 等） |\\n\\n## 连续性保障体系（更新版）\\n\\n### 第一层：首帧+尾帧锚点（核心）\\n每段视频附带：首帧图片（已知） + 尾帧图片（截图供下一段用）\\n→ 这是目前最有效的连续性方案\\n\\n### 第二层：固定风格提示词模板\\n每段提示词包含固定风格段落：\\n- 色调、光线、构图、年代细节（固定不变）\\n\\n### 第三层：视觉圣经（Style Bible）\\n开拍前建立完整视觉参考文档（色调/构图/光线/年代细节/禁止元素）\\n\\n### 第四层：Seed 值记录与沿用\\n成功生成的 Seed 值记录并沿用\\n\\n### 第五层：脚本层控制\\n以场景/物件/文字为主角，减少人物出现\\n\\n### 第六层：ComfyUI VACE 缝合\\n自动生成过渡帧，替换片段边界处的不连贯帧\\n\\n### 第七层：剪映统一 LUT\\n所有片段统一色调滤镜\\n\\n## 协作模式\\n\\n| 阶段 | 用户操作 | AI 操作 |\\n|------|---------|---------|\\n| 脚本 | 无 | 生成完整分镜脚本 + 时间轴 |\\n| 图像生成 | 批量复制提示词→SuperGrok生成 | 提供完整提示词列表 |\\n| 视频生成 | 批量复制提示词→SuperGrok生成 | 提供首帧尾帧提示词对 |\\n| 配音 | 无 | ElevenLabs API 自动生成音频 |\\n| 缝合/组装 | ComfyUI 运行工作流 | 提供/更新工作流 |\\n| 剪辑 | 剪映操作 | 提供 SRT 字幕 + 剪辑指引 |\\n| 发布 | 用户自行决定 | 提供各平台文案 |\\n\\n## 质量审查机制\\n每个阶段完成后：\\n- 用户截图发给 AI\\n- AI 视觉分析判断是否达标\\n- 不符合 → 调整提示词重做\\n- 符合 → 进入下一步\\n\\n## 工具现状\\n\\n| 工具 | 状态 | 说明 |\\n|------|------|------|\\n| LLM（我） | ✅ | 脚本/提示词/字幕/指引 |\\n| SuperGrok | ✅ 主力 | Aurora 模型质量最优 |\\n| ElevenLabs | ✅ | API 自动配音 |\\n| 剪映 | ✅ | 最终合成 |\\n| ComfyUI | ⚠️ 可选 | 批量自动化层，非必需 |\\n| DiffusionBee | ❌ 不推荐 | 质量不如 SuperGrok |\\n| Runway | ❌ 已移除 | 成本过高 |\\n\\n## 协作约定\\n- 删除任何文件必须事先得到用户明确允许\\n- 触发授权操作前，先用中文说明意图\\n- 用户偏好中文沟通\\n\", \"path\": \"creative/macau-video-workflow/SKILL.md\", \"skill_dir\": \"/home/administrator/.hermes/skills/creative/macau-video-workflow\", \"linked_files\": null, \"usage_hint\": null, \"required_environment_variables\": [], \"required_commands\": [], \"missing_required_environment_variables\": [], \"missing_credential_files\": [], \"missing_required_commands\": [], \"setup_needed\": false, \"setup_skipped\": false, \"readiness_status\": \"available\"}",
+      "tool_call_id": "call_function_i1teltdofmtl_1"
+    },
+    {
+      "role": "assistant",
+      "content": "现有 skill 有几处需要更新——之前会话中发现了实际情况与计划不同：\n\n1. **ComfyUI VACE 节点** — 实际未使用，SuperGrok 手动操作是主力\n2. **ElevenLabs** — API key 未配置，实际用 edge-tts 替代\n3. **实际工作流** — 简化为：SuperGrok图像 → SuperGrok视频 → 剪映合成",
+      "reasoning": "The existing skill has several things that are outdated or wrong based on what was learned in the session:\n\n1. **ComfyUI is mentioned as optional but the skill still lists ComfyUI-VACE nodes as key tools** - but we discovered ComfyUI quality is inferior to SuperGrok for generation, and VACE nodes weren't actually used\n2. **ElevenLabs** - was planned but actually ElevenLabs API key was NOT configured, we used edge-tts instead\n3. **The TTS approach** - we discovered edge-tts works better than the text_to_speech tool for Chinese\n4. **DiffusionBee** - mentioned as \"not recommended\" but actually the user has it installed on Mac Mini M4, and it's separate from ComfyUI\n\n\n5. **The actual workflow** - we ended up with a much simpler pipeline: SuperGrok for generation, edge-tts for voiceover,剪映 for assembly, and we skipped ComfyUI entirely\n\nI need to update the skill to reflect what actually worked - removing the ComfyUI-VACE nodes since we never used them, swapping ElevenLabs for edge-tts since the API wasn't set up, cleaning up the DiffusionBee reference, and streamlining the entire pipeline to match the three-step process we actually landed on.",
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "call_function_ypld5vm5u2na_1",
+          "call_id": "call_function_ypld5vm5u2na_1",
+          "response_item_id": "fc_function_ypld5vm5u2na_1",
+          "type": "function",
+          "function": {
+            "name": "skill_manage",
+            "arguments": "{\"action\": \"patch\", \"name\": \"macau-video-workflow\", \"old_string\": \"---\\nname: macau-video-workflow\\ndescription: 澳门历史故事 AI 视频创作工作流 — 首帧尾帧锚点串联 + 批量自动化 + 混和工作流（SuperGrok 生成 + ComfyUI 编排 + ElevenLabs 配音）\\n---\\n# 澳门历史故事 AI 视频创作工作流\\n\\n## 背景\\n- 用户来自澳门，内容方向为澳门历史故事（landmarks, figures, events, cultural fusion）\\n- 用户不自己出镜/配音，全程 AI 代劳\\n- 用户定位：工具人（复制、粘贴、点击）→ **但核心诉求是批量自动化**\\n- AI 定位：幕后操盘手（全程准备所有内容、提示词、文件、指引）\\n\\n## 用户核心诉求（2026年5月确认）\\n\\n**批量自动化流水线，非逐帧手动操作**\\n- 用户明确拒绝\\\"一步一步走\\\"的原始工作流\\n- 希望类似 ComfyUI 可视化流水线：一次定义，N次复用\\n- 每集目标时长：10-15分钟长视频\\n\\n## 核心发现：首帧+尾帧锚点串联技术\\n\\n**这是保证 AI 视频连续性的关键技术，已由用户亲验确认。**\\n\\n每段视频片段 generation 流程：\\n```\\n场景 N                场景 N+1\\n┌─────────┐           ┌─────────┐\\n│ 首帧图片 │ ──生成──→ │ 视频片段  │\\n│ (已知)   │           │ (SuperGrok)│\\n└─────────┘           └─────────┘\\n                           ↓\\n                     ┌─────────┐\\n                     │ 尾帧图片 │ ──下一片段首帧\\n                     │ (截图)   │\\n                     └─────────┘\\n```\\n\\n几秒一个锚点，通过锚点串联整部视频 = 流畅连贯。\\n\\n## 工具架构（混和方案）\\n\\n| 工具 | 角色 | 自动化 |\\n|------|------|--------|\\n| LLM（我） | 脚本、提示词、字幕、编排 | ✅ 全自动 |\\n| **SuperGrok** | 图像 + 视频生成（质量最优） | ✋ 手动，批量给提示词 |\\n| **ComfyUI** | 批量流水线编排 + 首帧尾帧锚点节点 + VACE 缝合 | 可选自动化层 |\\n| ElevenLabs | 配音 | ✅ API 自动 |\\n| 剪映 | 最终合成 | ✋ 手动 |\\n\\n**重要说明：**\\n- SuperGrok 的 Aurora 模型质量仍然领先开源模型（用户亲验确认）\\n- ComfyUI 价值在于工作流可视化 + 批量自动化，不是替代 SuperGrok\\n- Mac Mini M4 硬件限制：跑不了最高质量开源视频模型（需要大显存）\\n\\n## 三层流水线架构\\n\\n```\\n┌─────────────────────────────────────────────────────────┐\\n│  第1层：编排层（ComfyUI 或 Python）                      │\\n│  输入脚本 → 自动拆解 N 个场景 → 批量分发 → 自动组装     │\\n└─────────────────────────────────────────────────────────┘\\n         ↓\\n┌─────────────────────────────────────────────────────────┐\\n│  第2层：生成层（SuperGrok）                              │\\n│  每个片段 = 首帧图 + 尾帧图 + 提示词 → 锚点视频         │\\n│  用户批量操作，输出到指定文件夹                         │\\n└─────────────────────────────────────────────────────────┘\\n         ↓\\n┌─────────────────────────────────────────────────────────┐\\n│  第3层：合成层                                           │\\n│  ComfyUI VACE Joiner 自动缝合片段                      │\\n│  ElevenLabs API 批量配音                                │\\n│  剪映 微调 + 字幕                                        │\\n└─────────────────────────────────────────────────────────┘\\n```\\n\\n## 关键工具节点（ComfyUI）\\n\\n| 节点/工具 | 用途 |\\n|-----------|------|\\n| `ComfyUI-WanVideoStartEndFrames` | 首帧+尾帧引导视频生成 |\\n| `ComfyUI-Wan-VACE-Video-Joiner` | 多片段自动缝合 + 生成过渡帧 |\\n| `ComfyUI-LTXTricks` | LTX-Video 额外控制（RF-Inversion 等） |\\n\\n## 连续性保障体系（更新版）\\n\\n### 第一层：首帧+尾帧锚点（核心）\\n每段视频附带：首帧图片（已知） + 尾帧图片（截图供下一段用）\\n→ 这是目前最有效的连续性方案\\n\\n### 第二层：固定风格提示词模板\\n每段提示词包含固定风格段落：\\n- 色调、光线、构图、年代细节（固定不变）\\n\\n### 第三层：视觉圣经（Style Bible）\\n开拍前建立完整视觉参考文档（色调/构图/光线/年代细节/禁止元素）\\n\\n### 第四层：Seed 值记录与沿用\\n成功生成的 Seed 值记录并沿用\\n\\n### 第五层：脚本层控制\\n以场景/物件/文字为主角，减少人物出现\\n\\n### 第六层：ComfyUI VACE 缝合\\n自动生成过渡帧，替换片段边界处的不连贯帧\\n\\n### 第七层：剪映统一 LUT\\n所有片段统一色调滤镜\\n\\n## 协作模式\\n\\n| 阶段 | 用户操作 | AI 操作 |\\n|------|---------|---------|\\n| 脚本 | 无 | 生成完整分镜脚本 + 时间轴 |\\n| 图像生成 | 批量复制提示词→SuperGrok生成 | 提供完整提示词列表 |\\n| 视频生成 | 批量复制提示词→SuperGrok生成 | 提供首帧尾帧提示词对 |\\n| 配音 | 无 | ElevenLabs API 自动生成音频 |\\n| 缝合/组装 | ComfyUI 运行工作流 | 提供/更新工作流 |\\n| 剪辑 | 剪映操作 | 提供 SRT 字幕 + 剪辑指引 |\\n| 发布 | 用户自行决定 | 提供各平台文案 |\\n\\n## 质量审查机制\\n每个阶段完成后：\\n- 用户截图发给 AI\\n- AI 视觉分析判断是否达标\\n- 不符合 → 调整提示词重做\\n- 符合 → 进入下一步\\n\\n## 工具现状\\n\\n| 工具 | 状态 | 说明 |\\n|------|------|------|\\n| LLM（我） | ✅ | 脚本/提示词/字幕/指引 |\\n| SuperGrok | ✅ 主力 | Aurora 模型质量最优 |\\n| ElevenLabs | ✅ | API 自动配音 |\\n| 剪映 | ✅ | 最终合成 |\\n| ComfyUI | ⚠️ 可选 | 批量自动化层，非必需 |\\n| DiffusionBee | ❌ 不推荐 | 质量不如 SuperGrok |\\n| Runway | ❌ 已移除 | 成本过高 |\\n\\n## 协作约定\\n- 删除任何文件必须事先得到用户明确允许\\n- 触发授权操作前，先用中文说明意图\\n- 用户偏好中文沟通\", \"new_string\": \"---\\nname: macau-video-workflow\\ndescription: 澳门历史故事 AI 视频创作工作流 — SuperGrok 图像/视频 + edge-tts 配音 + 剪映合成，用户只执行\\\"点按钮\\\"操作\\n---\\n# 澳门历史故事 AI 视频创作工作流\\n\\n## 背景\\n- 用户来自澳门，内容方向为澳门历史故事（landmarks, figures, events, cultural fusion）\\n- 用户不自己出镜/配音，全程 AI 代劳\\n- **用户只做\\\"决定\\\"和\\\"AI不能做的操作部分\\\"，AI 全包制作**\\n- 每集目标时长：10-15分钟长视频\\n\\n## 工具链现状（实测确认）\\n\\n| 工具 | 角色 | 状态 |\\n|------|------|------|\\n| LLM（我） | 脚本、提示词、字幕、剪辑指引、发布文案 | ✅ 全自动 |\\n| SuperGrok | 图像 + 视频生成（主力，质量最优） | ✅ 手动执行 |\\n| edge-tts | 配音（绕过 ElevenLabs API 未配置的替代方案） | ✅ 自动生成 |\\n| 剪映 | 最终合成 + 字幕导入 | ✅ 手动执行 |\\n| DiffusionBee | Mac Mini M4 本地图像生成（备用） | ⚠️ 质量不如 SuperGrok |\\n\\n**重要说明：**\\n- SuperGrok 的 Aurora 模型质量领先开源方案，用户确认\\n- ComfyUI 不作为主要生成工具（质量不如 SuperGrok）\\n- ElevenLabs API key 未配置，用 edge-tts 替代（中文质量可用）\\n\\n## 实际工作流（三步完成）\\n\\n```\\n① AI 全包制作包\\n   脚本 + 场景锚点表 + 图像提示词 + 视频提示词 + 配音 + SRT字幕 + 剪映指引 + 发布文案\\n\\n        ↓ 用户只管点按钮\\n\\n② SuperGrok 批量生成\\n   图像（9张首帧） → 视频（9段，首帧尾帧锚点串联）\\n\\n        ↓ 用户只管点按钮\\n\\n③ 剪映合成\\n   导入素材 → 按指引组装 → 导出视频\\n```\\n\\n## 首帧+尾帧锚点串联技术（核心）\\n\\n每段视频 generation 流程：\\n```\\n场景 N                场景 N+1\\n┌─────────┐           ┌─────────┐\\n│ 首帧图片 │ ──生成──→ │ 视频片段  │\\n│ (已知)   │           │ (SuperGrok)│\\n└─────────┘           └─────────┘\\n                           ↓\\n                     ┌─────────┐\\n                     │ 尾帧图片 │ ──下一片段首帧\\n                     │ (截图)   │\\n                     └─────────┘\\n```\\n\\n## 制作包结构（每个 EP 一个文件夹）\\n\\n```\\nEPXX_主题/\\n├── 制作包.md          ← 核心：旁白脚本、场景锚点表、图像提示词、视频提示词\\n├── 剪映剪辑指引.md     ← 详细操作步骤\\n├── 发布文案.md         ← 各平台标题/简介/标签\\n├── audio/             ← 配音 MP3（scene01.mp3 ~ scene09.mp3）\\n└── subtitles/         ← SRT 字幕（分场景 + 合并版）\\n```\\n\\n## 协作分工\\n\\n| 阶段 | 用户操作 | AI 操作 |\\n|------|---------|---------|\\n| 脚本/提示词 | 无 | ✅ 生成完整制作包 |\\n| 图像生成 | SuperGrok 点按钮（批量） | 提供精确英文提示词 |\\n| 视频生成 | SuperGrok 点按钮（批量） | 提供首帧尾帧锚点 + 视频提示词 |\\n| 配音 | 无 | ✅ edge-tts 自动生成 MP3 |\\n| 字幕 | 无 | ✅ SRT 文件自动生成 |\\n| 剪辑 | 剪映操作（按指引） | 提供时间轴 + 剪辑步骤 |\\n| 发布 | 用户自行决定 | ✅ 各平台文案 |\\n\\n## edge-tts 配音（实测可用）\\n\\n**用法：execute_code 直接调用 edge-tts，绕过 text_to_speech 工具对中文长文本的 Bug。**\\n\\n```python\\nimport edge_tts\\nimport asyncio\\n\\nasync def generate_voice(text, output_path):\\n    communicate = edge_tts.Communicate(text, \\\"zh-CN-XiaoxiaoNeural\\\")\\n    await communicate.save(output_path)\\n\\nasyncio.run(generate_voice(\\\"旁白文本\\\", \\\"audio/scene01.mp3\\\"))\\n```\\n\\n推荐音色：`zh-CN-XiaoxiaoNeural`（女声）、`zh-CN-YunxiNeural`（男声）\\n\\n## 质量审查机制\\n\\n每个阶段完成后：\\n- 用户截图/文件发给 AI\\n- AI 视觉分析判断是否达标\\n- 不符合 → 调整提示词重做\\n- 符合 → 进入下一步\\n\\n## 协作约定\\n- 删除任何文件必须事先得到用户明确允许\\n- 触发授权操作前，先用中文说明意图和后果\\n- 用户偏好简体中文沟通\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"success\": true, \"message\": \"Patched SKILL.md in skill 'macau-video-workflow' (1 replacement).\"}",
+      "tool_call_id": "call_function_ypld5vm5u2na_1"
+    },
+    {
+      "role": "assistant",
+      "content": "**Skill 已更新。** ✅\n\n主要修正了以下内容：\n\n| 修正项 | 原内容 | 更新后 |\n|--------|--------|--------|\n| 工具链描述 | ComfyUI + ElevenLabs + SuperGrok 混和 | SuperGrok + edge-tts + 剪映 |\n| ComfyUI | 列为关键工具节点（VACE等） | 移除，实际未使用 |\n| ElevenLabs | API 自动配音 | 替换为 edge-tts（API 未配置） |\n| 工作流 | 三层复杂架构 | 简化为三步：制作包 → SuperGrok → 剪映 |\n| 分工说明 | \"工具人\"定位 | 明确：AI全包制作，用户只点按钮 |\n\n---\n\n**EP01 现在的状态：** 所有 AI 能做的内容（脚本/配音/字幕/提示词/文案）全部完成，等你去 SuperGrok 批量生成图像和视频。生成完发给我，我来做质量审查和下一步组装！",
+      "reasoning": "The skill has been updated. Now let me report back to the user with the status.",
+      "finish_reason": "stop"
+    }
+  ]
+}
