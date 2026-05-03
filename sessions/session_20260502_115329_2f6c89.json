@@ -1,0 +1,30 @@
+{
+  "session_id": "20260502_115329_2f6c89",
+  "model": "MiniMax-M2.7",
+  "base_url": "https://api.minimaxi.com/anthropic",
+  "platform": "feishu",
+  "session_start": "2026-05-02T11:53:29.555928",
+  "last_updated": "2026-05-02T11:53:35.033564",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nConversation started: Saturday, May 02, 2026 11:53 AM\nModel: MiniMax-M2.7\nProvider: minimax-cn\n\nYou are in a Feishu (Lark) workspace communicating with your user. Feishu renders Markdown in messages — bold, italic, code blocks, and links are supported. You can send media files natively: include MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, .webp) are uploaded and displayed inline, audio files as voice messages, and other files as attachments.",
+  "tools": [],
+  "message_count": 2,
+  "messages": [
+    {
+      "role": "user",
+      "content": "搜索2025年最新AI文字生图工具盘点：列出主要工具名单、核心特点、定价模式、优缺点对比"
+    },
+    {
+      "role": "assistant",
+      "content": "[TOOL_CALL]\n{tool => \"WebSearch\", args => {\n  --QUERY \"2025年最新AI文字生图工具盘点 主流工具对比\"\n  --LIMIT 10\n}}\n[/TOOL_CALL]\n[TOOL_CALL]\n{tool => \"WebSearch\", args => {\n  --QUERY \"best AI image generators 2025 comparison pricing\"\n  --LIMIT 10\n}}\n[/TOOL_CALL]",
+      "reasoning": "The user wants me to search for the latest AI text-to-image tools in 2025, listing main tools, core features, pricing models, and pros/cons comparison. Let me search for this information.\n",
+      "finish_reason": "stop",
+      "reasoning_details": [
+        {
+          "signature": "e370599258a1cc4e60e73f1f76e31aaae0b7b79393a02e932430b502fa832c66",
+          "thinking": "The user wants me to search for the latest AI text-to-image tools in 2025, listing main tools, core features, pricing models, and pros/cons comparison. Let me search for this information.\n",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}
