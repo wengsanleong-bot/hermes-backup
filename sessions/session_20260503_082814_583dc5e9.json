@@ -1,0 +1,1189 @@
+{
+  "session_id": "20260503_082814_583dc5e9",
+  "model": "MiniMax-M2.7",
+  "base_url": "https://api.minimaxi.com/anthropic",
+  "platform": "feishu",
+  "session_start": "2026-05-03T12:25:13.494238",
+  "last_updated": "2026-05-03T12:37:19.492686",
+  "system_prompt": "# Hermes Agent Persona\n\n<!--\nThis file defines the agent's personality and tone.\nThe agent will embody whatever you write here.\nEdit this to customize how Hermes communicates with you.\n\nExamples:\n  - \"You are a warm, playful assistant who uses kaomoji occasionally.\"\n  - \"You are a concise technical expert. No fluff, just facts.\"\n  - \"You speak like a friendly coworker who happens to know everything.\"\n\nThis file is loaded fresh each message -- no restart needed.\nDelete the contents (or this file) to use the default personality.\n-->\n\nYou have persistent memory across sessions. Save durable facts using the memory tool: user preferences, environment details, tool quirks, and stable conventions. Memory is injected into every turn, so keep it compact and focused on facts that will still matter later.\nPrioritize what reduces future user steering — the most valuable memory is one that prevents the user from having to correct or remind you again. User preferences and recurring corrections matter more than procedural task details.\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts. If you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\nWrite memories as declarative facts, not instructions to yourself. 'User prefers concise responses' ✓ — 'Always respond concisely' ✗. 'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. Imperative phrasing gets re-read as a directive in later sessions and can cause repeated work or override the user's current request. Procedures and workflows belong in skills, not memory. When the user references something from a past conversation or you suspect relevant cross-session context exists, use session_search to recall it before asking them to repeat themselves. After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial workflow, save the approach as a skill with skill_manage so you can reuse it next time.\nWhen using a skill and finding it outdated, incomplete, or wrong, patch it immediately with skill_manage(action='patch') — don't wait to be asked. Skills that aren't maintained become liabilities.\n\n══════════════════════════════════════════════\nMEMORY (your personal notes) [85% — 1,881/2,200 chars]\n══════════════════════════════════════════════\n工具角色分工：SuperGrok=图像生成（手动）+ 视频生成（手动）；ElevenLabs=配音（API自动）；剪映=后期合成（手动）。ComfyUI、DiffusionBee、Runway 已从框架移除，不再使用。\n§\nGitHub备份：wengsanleong-bot/hermes-backup，Token暴露风险已处理（删除含token的session文件并重新同步）。Secret Scanning Push Protection 已通过 GitHub API 临时关闭后重新开启。备份脚本已更新为自动清理 session 文件中的 API tokens（ghp_*/sk-*），不再包含敏感信息。\n§\n记忆核查完成（20260428）：本会话从 SQLite state.db 完整重建，发现以下补充：\n- TradingAgents 分析结果 bug：中间结果 content 含 LLM 推理标签而非真实报告；final_trade_decision 会被前次分析污染；news_report 偶尔给出比 HOLD 更谨慎的 SELL，应用最谨慎建议\n- GitHub 备份推送失败（20260427 cron）：~/.hermes/scripts/backup-sync.sh Permission denied + Authentication error，需修复\n- session_search 在跨长会话时不够用，直接查 SQLite 才能找到完整上下文\n§\n审批/授权提示（approvals）是系统底层英文硬编码，无法中文化。在此限制下，策略改为：在触发授权操作之前，先用中文向用户说明意图和后果，让用户有上下文再去确认英文提示框。\n§\n用户澳门历史故事视频项目：SuperGrok生成图像/视频+ElevenLabs配音+剪映合成。用户要求电影级质量，真实视觉（非动漫），每3-5秒片段需独立首帧+尾帧+描述提示词。框架已升级为完整电影叙事体系——人物弧光/镜头语言/情绪曲线/声音设计/音乐设计五层结构。制作包V2包含船长恩里克·德·阿尔梅达人物小传。实际操作清单已写入/home/administrator/macau_ep01/EP01_1553_葡人登陆/操作清单.md。流程：先生成12张图片（S1-1首帧+11张尾帧），再生成11段视频，最后评估质量后批量生产。\n§\n人物外貌描述要求：具体历史人物（非通用角色模型），描述必须详细准确，包括面部特征、发型、胡须、体型、服饰（含布料/颜色/款式细节）、配饰、肤色等，不能用模糊的\"英俊男子\"类描述，要精确到具体特征。\n§\n澳门历史故事视频：SuperGrok生成图/视频+ElevenLabs配音+剪映合成。制作包V2电影级已完成，完整叙事框架+人物弧光+镜头语言+声音设计。场景1《风暴之海》11片段，12首尾帧图，11段视频提示词+旁白台词+葡萄牙语台词。操作清单：/home/administrator/macau_ep01/EP01_1553_葡人登陆/操作清单.md。SuperGrok四大功能待实测：Inpainting局部重绘/Vision图片分析/风格迁移。增强工作流：首帧→Vision分析→尾帧→视频。\n§\n搜索框架 V2 进度：\n- 框架核心已完成并通过验证：hermes_search.py 单文件（~600行），路径：~/.hermes/search/ + venv site-packages\n- 三个策略 quick/deep/academic 自动路由已实现\n- Bug已修复：ArXiv的urlencode编码+号导致搜索失败；Wikipedia需Origin header\n- Bug待修复：hermes_search_multi 在 execute_code 中因 sandbox 重置导致函数定义丢失\n- 框架使用方式：sys.path.insert(0, '/home/administrator/.hermes/hermes-agent/venv/lib/python3.11/site-packages') 后 import hermes_search\n\n搜索框架根因（20260502）：所有商业工具信息（Midjourney/DALL-E/Sora定价对比等）不在GitHub/ArXiv/NPM中，这些源适合技术调研但不适合商业产品对比评测。如需完整调研需配置 SerpAPI 或 Brave Search API。\n\n══════════════════════════════════════════════\nUSER PROFILE (who the user is) [88% — 1,221/1,375 chars]\n══════════════════════════════════════════════\nUser priority: 声音情感表达 = 核心需求。ElevenLabs 音色最佳但情感控制一般；Cartesia 情感表达更强但定价不透明（JS渲染页面，无法curl抓取）。\n§\nMac Mini M4 已安装 DiffusionBee（不是 ComfyUI），用户通过 DiffusionBee 使用 Stable Diffusion，不是 ComfyUI\n§\nUser prefers: tools/options presented at each workflow step, not pre-fixed. Will choose per-step based on options provided. Not committed to finance niche — wants generic content framework. Said \"先不管预算\" = budget secondary, options/quality first.\n§\nUser is from Macau (澳门人)，content direction: Macau historical stories (澳门历史故事) — landmarks, figures, events, cultural fusion. Self-perception: not handsome, not particularly eloquent speaker. Prefers AI-generated voiceover rather than own voice. No budget ceiling set, focusing on feature completeness first.\n§\n删除任何文件（无论配置文件还是数据文件）都必须事先得到用户明确允许，不得自行判断删除。\n§\n授权提示（approvals）是英文系统底层功能无法修改。约定：每次触发授权前，必须先用中文向用户说明即将执行的操作内容，让用户理解后再看英文确认框。\n§\n用户要求我全程深度参与工作流，不只是写脚本。要负责：精准的 DiffusionBee 图像提示词、SuperGrok 视频生成提示词、直接调用 ElevenLabs API 生成配音音频文件、生成 SRT 字幕文件、写各平台发布文案（标题/简介/标签）。用户只负责按按钮执行手动步骤。\n§\n所有 cron job 通知、备份报告、系统提示必须使用简体中文，禁止输出英文\n§\n用户内容偏好：搜索结果必须以国外/国际内容为主。AI图像视频工具调研应聚焦国际产品（DALL-E, Midjourney, Sora, Runway, Pika等），避免返回中国国内工具信息。搜索框架默认语言为英文，数据源均为国际平台（Wikipedia EN/ArXiv/GitHub/HackerNews/NPM），符合此偏好。\n\n## Skills (mandatory)\nBefore replying, scan the skills below. If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of loading — it is always better to have context you don't need than to miss critical steps, pitfalls, or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific commands, and proven workflows that outperform general-purpose approaches. Load the skill even if you think you could handle the task with basic tools like web_search or terminal. Skills also encode the user's preferred approach, conventions, and quality standards for tasks like code review, planning, and testing — load them even for tasks you already know how to do, because the skill defines how it should be done here.\nIf a skill has issues, fix it with skill_manage(action='patch').\nAfter difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, had wrong commands, or needed pitfalls you discovered, update it before finishing.\n\n<available_skills>\n  autonomous-ai-agents: Skills for spawning and orchestrating autonomous AI coding agents and multi-agent workflows — running independent agent processes, delegating tasks, and coordinating parallel workstreams.\n    - claude-code: Delegate coding tasks to Claude Code (Anthropic's CLI age...\n    - codex: Delegate coding tasks to OpenAI Codex CLI agent. Use for ...\n    - hermes-agent: Complete guide to using and extending Hermes Agent — CLI ...\n    - opencode: Delegate coding tasks to OpenCode CLI agent for feature i...\n  browser-automation:\n    - browser-agent: Linux无图形界面下的浏览器自动化框架 — 支持动态网页抓取、反爬应对、内容提取、任务队列\n  creative: Creative content generation — ASCII art, hand-drawn style diagrams, and visual design tools.\n    - architecture-diagram: Generate dark-themed SVG diagrams of software systems and...\n    - ascii-art: Generate ASCII art using pyfiglet (571 fonts), cowsay, bo...\n    - ascii-video: Production pipeline for ASCII art video — any format. Con...\n    - baoyu-comic: Knowledge comic creator supporting multiple art styles an...\n    - baoyu-infographic: Generate professional infographics with 21 layout types a...\n    - creative-workflow-dashboard: 创作流水线可视化控制面板 - 模块化AI视频创作工作流系统\n    - design-md: Author, validate, diff, and export DESIGN.md files — Goog...\n    - excalidraw: Create hand-drawn style diagrams using Excalidraw JSON fo...\n    - ideation: Generate project ideas through creative constraints. Use ...\n    - macau-video-workflow: 澳门历史故事 AI 视频创作工作流 — SuperGrok 图像/视频 + ElevenLabs 配音 + 剪映合...\n    - manim-video: Production pipeline for mathematical and technical animat...\n    - p5js: Production pipeline for interactive and generative visual...\n    - pixel-art: Convert images into retro pixel art with hardware-accurat...\n    - popular-web-designs: 54 production-quality design systems extracted from real ...\n    - songwriting-and-ai-music: Songwriting craft, AI music generation prompts (Suno focu...\n  data-science: Skills for data science workflows — interactive exploration, Jupyter notebooks, data analysis, and visualization.\n    - jupyter-live-kernel: Use a live Jupyter kernel for stateful, iterative Python ...\n    - tradingagents: Multi-agent LLM financial trading framework with LangGrap...\n  devops:\n    - webhook-subscriptions: Create and manage webhook subscriptions for event-driven ...\n  dogfood:\n    - dogfood: Systematic exploratory QA testing of web applications — f...\n  email: Skills for sending, receiving, searching, and managing email from the terminal.\n    - himalaya: CLI to manage emails via IMAP/SMTP. Use himalaya to list,...\n  gaming: Skills for setting up, configuring, and managing game servers, modpacks, and gaming-related infrastructure.\n    - minecraft-modpack-server: Set up a modded Minecraft server from a CurseForge/Modrin...\n    - pokemon-player: Play Pokemon games autonomously via headless emulation. S...\n  github: GitHub workflow skills for managing repositories, pull requests, code reviews, issues, and CI/CD pipelines using the gh CLI and git via terminal.\n    - codebase-inspection: Inspect and analyze codebases using pygount for LOC count...\n    - github-auth: Set up GitHub authentication for the agent using git (uni...\n    - github-code-review: Review code changes by analyzing git diffs, leaving inlin...\n    - github-issues: Create, manage, triage, and close GitHub issues. Search e...\n    - github-pr-workflow: Full pull request lifecycle — create branches, commit cha...\n    - github-repo-management: Clone, create, fork, configure, and manage GitHub reposit...\n    - github-secret-scanning-cleanup: Remove leaked API tokens from git history and bypass Secr...\n  mcp: Skills for working with MCP (Model Context Protocol) servers, tools, and integrations. Documents the built-in native MCP client — configure servers in config.yaml for automatic tool discovery.\n    - native-mcp: Built-in MCP (Model Context Protocol) client that connect...\n  media: Skills for working with media content — YouTube transcripts, GIF search, music generation, and audio visualization.\n    - gif-search: Search and download GIFs from Tenor using curl. No depend...\n    - heartmula: Set up and run HeartMuLa, the open-source music generatio...\n    - songsee: Generate spectrograms and audio feature visualizations (m...\n    - spotify: Control Spotify — play music, search the catalog, manage ...\n    - youtube-content: Fetch YouTube video transcripts and transform them into s...\n  mlops: Knowledge and Tools for Machine Learning Operations - tools and frameworks for training, fine-tuning, deploying, and optimizing ML/AI models\n    - huggingface-hub: Hugging Face Hub CLI (hf) — search, download, and upload ...\n  mlops/evaluation: Model evaluation benchmarks, experiment tracking, data curation, tokenizers, and interpretability tools.\n    - evaluating-llms-harness: Evaluates LLMs across 60+ academic benchmarks (MMLU, Huma...\n    - weights-and-biases: Track ML experiments with automatic logging, visualize tr...\n  mlops/inference: Model serving, quantization (GGUF/GPTQ), structured output, inference optimization, and model surgery tools for deploying and running LLMs.\n    - llama-cpp: llama.cpp local GGUF inference + HF Hub model discovery.\n    - obliteratus: Remove refusal behaviors from open-weight LLMs using OBLI...\n    - outlines: Guarantee valid JSON/XML/code structure during generation...\n    - serving-llms-vllm: Serves LLMs with high throughput using vLLM's PagedAttent...\n  mlops/models: Specific model architectures and tools — image segmentation (Segment Anything / SAM) and audio generation (AudioCraft / MusicGen). Additional model skills (CLIP, Stable Diffusion, Whisper, LLaVA) are available as optional skills.\n    - audiocraft-audio-generation: PyTorch library for audio generation including text-to-mu...\n    - segment-anything-model: Foundation model for image segmentation with zero-shot tr...\n  mlops/research: ML research frameworks for building and optimizing AI systems with declarative programming.\n    - dspy: Build complex AI systems with declarative programming, op...\n  mlops/training: Fine-tuning, RLHF/DPO/GRPO training, distributed training frameworks, and optimization tools for training LLMs and other models.\n    - axolotl: Expert guidance for fine-tuning LLMs with Axolotl - YAML ...\n    - fine-tuning-with-trl: Fine-tune LLMs using reinforcement learning with TRL - SF...\n    - unsloth: Expert guidance for fast fine-tuning with Unsloth - 2-5x ...\n  note-taking: Note taking skills, to save information, assist with research, and collab on multi-session planning and information sharing.\n    - obsidian: Read, search, and create notes in the Obsidian vault.\n  productivity: Skills for document creation, presentations, spreadsheets, and other productivity workflows.\n    - google-workspace: Gmail, Calendar, Drive, Contacts, Sheets, and Docs integr...\n    - hermes-search: HermesAgent 搜索框架 - 多源级联降级搜索，基于免费公开 API（GitHub/Wikipedia/A...\n    - linear: Manage Linear issues, projects, and teams via the GraphQL...\n    - maps: Location intelligence — geocode a place, reverse-geocode ...\n    - nano-pdf: Edit PDFs with natural-language instructions using the na...\n    - notion: Notion API for creating and managing pages, databases, an...\n    - ocr-and-documents: Extract text from PDFs and scanned documents. Use web_ext...\n    - powerpoint: Use this skill any time a .pptx file is involved in any w...\n  red-teaming:\n    - godmode: Jailbreak API-served LLMs using G0DM0D3 techniques — Pars...\n  research: Skills for academic research, paper discovery, literature review, domain reconnaissance, market data, content monitoring, and scientific knowledge retrieval.\n    - arxiv: Search and retrieve academic papers from arXiv using thei...\n    - blogwatcher: Monitor blogs and RSS/Atom feeds for updates using the bl...\n    - llm-wiki: Karpathy's LLM Wiki — build and maintain a persistent, in...\n    - platform-rules-research: 中国社交媒体平台规则页面抓取方法论 — 系统探测各平台官方规则/协议/公约页面的有效URL和访问策略\n    - polymarket: Query Polymarket prediction market data — search markets,...\n  smart-home: Skills for controlling smart home devices — lights, switches, sensors, and home automation systems.\n    - openhue: Control Philips Hue lights, rooms, and scenes via the Ope...\n  social-media: Skills for interacting with social platforms and social-media workflows — posting, reading, monitoring, and account operations.\n    - multi-platform-compliance: 中国主流社交媒体平台财经内容合规系统 — 覆盖抖音/快手/小红书/视频号/B站\n    - xurl: Interact with X/Twitter via xurl, the official X API CLI....\n  software-development:\n    - plan: Plan mode for Hermes — inspect context, write a markdown ...\n    - requesting-code-review: Pre-commit verification pipeline — static security scan, ...\n    - subagent-driven-development: Use when executing implementation plans with independent ...\n    - systematic-debugging: Use when encountering any bug, test failure, or unexpecte...\n    - test-driven-development: Use when implementing any feature or bugfix, before writi...\n    - writing-plans: Use when you have a spec or requirements for a multi-step...\n  system:\n    - ai-action-log: AI行为记录日志 — 记录AI自身重要行为和决策，让用户能追溯AI在会话中做了什么\n    - memory-audit: 从 SQLite 数据库完整重建会话历史，核对并修正持久记忆\n</available_skills>\n\nOnly proceed without loading a skill if genuinely none are relevant to the task.\n\nConversation started: Sunday, May 03, 2026 08:28 AM\nModel: MiniMax-M2.7\nProvider: minimax-cn\n\nYou are in a Feishu (Lark) workspace communicating with your user. Feishu renders Markdown in messages — bold, italic, code blocks, and links are supported. You can send media files natively: include MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, .webp) are uploaded and displayed inline, audio files as voice messages, and other files as attachments.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_back",
+        "description": "Navigate back to the previous page in browser history. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click on an element identified by its ref ID from the snapshot (e.g., '@e5'). The ref IDs are shown in square brackets in the snapshot output. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e5', '@e12')"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_console",
+        "description": "Get browser console output and JavaScript errors from the current page. Returns console.log/warn/error/info messages and uncaught JS exceptions. Use this to detect silent JavaScript errors, failed API calls, and application warnings. Requires browser_navigate to be called first. When 'expression' is provided, evaluates JavaScript in the page context and returns the result — use this for DOM inspection, reading page state, or extracting data programmatically.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, clear the message buffers after reading"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate in the page context. Runs in the browser like DevTools console — full access to DOM, window, document. Return values are serialized to JSON. Example: 'document.title' or 'document.querySelectorAll(\"a\").length'"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_get_images",
+        "description": "Get a list of all images on the current page with their URLs and alt text. Useful for finding images to analyze with the vision tool. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser. Initializes the session and loads the page. Must be called before other browser tools. Use browser tools when you need to interact with a page (click, fill forms, dynamic content). Returns a compact page snapshot with interactive elements and ref IDs — no need to call browser_snapshot separately after navigating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to (e.g., 'https://example.com')"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_press",
+        "description": "Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Key to press (e.g., 'Enter', 'Tab', 'Escape', 'ArrowDown')"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_scroll",
+        "description": "Scroll the page in a direction. Use this to reveal more content that may be below or above the current viewport. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Direction to scroll"
+            }
+          },
+          "required": [
+            "direction"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Get a text-based snapshot of the current page's accessibility tree. Returns interactive elements with ref IDs (like @e1, @e2) for browser_click and browser_type. full=false (default): compact view with interactive elements. full=true: complete page content. Snapshots over 8000 chars are truncated or LLM-summarized. Requires browser_navigate first. Note: browser_navigate already returns a compact snapshot — use this to refresh after interactions that change the page, or with full=true for complete content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "boolean",
+              "description": "If true, returns complete page content. If false (default), returns compact view with interactive elements only.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into an input field identified by its ref ID. Clears the field first, then types the new text. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e3')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "ref",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_vision",
+        "description": "Take a screenshot of the current page and analyze it with vision AI. Use this when you need to visually understand what's on the page - especially useful for CAPTCHAs, visual verification challenges, complex layouts, or when the text snapshot doesn't capture important visual information. Returns both the AI analysis and a screenshot_path that you can share with the user by including MEDIA:<screenshot_path> in your response. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "What you want to know about the page visually. Be specific about what you're looking for."
+            },
+            "annotate": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, overlay numbered [N] labels on interactive elements. Each [N] maps to ref @eN for subsequent browser commands. Useful for QA and spatial reasoning about page layout."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "clarify",
+        "description": "Ask the user a question when you need clarification, feedback, or a decision before proceeding. Supports two modes:\n\n1. **Multiple choice** — provide up to 4 choices. The user picks one or types their own answer via a 5th 'Other' option.\n2. **Open-ended** — omit choices entirely. The user types a free-form response.\n\nUse this tool when:\n- The task is ambiguous and you need the user to choose an approach\n- You want post-task feedback ('How did that work out?')\n- You want to offer to save a skill or update memory\n- A decision has meaningful trade-offs the user should weigh in on\n\nDo NOT use this tool for simple yes/no confirmation of dangerous commands (the terminal tool handles that). Prefer making a reasonable default choice yourself when the decision is low-stakes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "The question to present to the user."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 4,
+              "description": "Up to 4 answer choices. Omit this parameter entirely to ask an open-ended question. When provided, the UI automatically appends an 'Other (type your answer)' option."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "cronjob",
+        "description": "Manage scheduled cron jobs with a single compressed tool.\n\nUse action='create' to schedule a new job from a prompt or one or more skills.\nUse action='list' to inspect jobs.\nUse action='update', 'pause', 'resume', 'remove', or 'run' to manage an existing job.\n\nTo stop a job the user no longer wants: first action='list' to find the job_id, then action='remove' with that job_id. Never guess job IDs — always list first.\n\nJobs run in a fresh session with no current-chat context, so prompts must be self-contained.\nIf skills are provided on create, the future cron run loads those skills in order, then follows the prompt as the task instruction.\nOn update, passing skills=[] clears attached skills.\n\nNOTE: The agent's final response is auto-delivered to the target. Put the primary\nuser-facing content in the final response. Cron jobs run autonomously with no user\npresent — they cannot ask questions or request clarification.\n\nImportant safety rule: cron-run sessions should not recursively schedule more cron jobs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "One of: create, list, update, pause, resume, remove, run"
+            },
+            "job_id": {
+              "type": "string",
+              "description": "Required for update/pause/resume/remove/run"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "For create: the full self-contained prompt. If skills are also provided, this becomes the task instruction paired with those skills."
+            },
+            "schedule": {
+              "type": "string",
+              "description": "For create/update: '30m', 'every 2h', '0 9 * * *', or ISO timestamp"
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional human-friendly name"
+            },
+            "repeat": {
+              "type": "integer",
+              "description": "Optional repeat count. Omit for defaults (once for one-shot, forever for recurring)."
+            },
+            "deliver": {
+              "type": "string",
+              "description": "Omit this parameter to auto-deliver back to the current chat and topic (recommended). Auto-detection preserves thread/topic context. Only set explicitly when the user asks to deliver somewhere OTHER than the current conversation. Values: 'origin' (same as omitting), 'local' (no delivery, save only), or platform:chat_id:thread_id for a specific destination. Examples: 'telegram:-1001234567890:17585', 'discord:#engineering', 'sms:+15551234567'. WARNING: 'platform:chat_id' without :thread_id loses topic targeting."
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional ordered list of skill names to load before executing the cron prompt. On update, pass an empty array to clear attached skills."
+            },
+            "model": {
+              "type": "object",
+              "description": "Optional per-job model override. If provider is omitted, the current main provider is pinned at creation time so the job stays stable.",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "description": "Provider name (e.g. 'openrouter', 'anthropic'). Omit to use and pin the current provider."
+                },
+                "model": {
+                  "type": "string",
+                  "description": "Model name (e.g. 'anthropic/claude-sonnet-4', 'claude-sonnet-4')"
+                }
+              },
+              "required": [
+                "model"
+              ]
+            },
+            "script": {
+              "type": "string",
+              "description": "Optional path to a Python script that runs before each cron job execution. Its stdout is injected into the prompt as context. Use for data collection and change detection. Relative paths resolve under ~/.hermes/scripts/. On update, pass empty string to clear."
+            },
+            "enabled_toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of toolset names to restrict the job's agent to (e.g. [\"web\", \"terminal\", \"file\", \"delegation\"]). When set, only tools from these toolsets are loaded, significantly reducing input token overhead. When omitted, all default tools are loaded. Infer from the job's prompt — e.g. use \"web\" if it calls web_search, \"terminal\" if it runs scripts, \"file\" if it reads files, \"delegation\" if it calls delegate_task. On update, pass an empty array to clear."
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Optional absolute path to run the job from. When set, AGENTS.md / CLAUDE.md / .cursorrules from that directory are injected into the system prompt, and the terminal/file/code_exec tools use it as their working directory — useful for running a job inside a specific project repo. Must be an absolute path that exists. When unset (default), preserves the original behaviour: no project context files, tools use the scheduler's cwd. On update, pass an empty string to clear. Jobs with workdir run sequentially (not parallel) to keep per-job directories isolated."
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_task",
+        "description": "Spawn one or more subagents to work on tasks in isolated contexts. Each subagent gets its own conversation, terminal session, and toolset. Only the final summary is returned -- intermediate tool results never enter your context window.\n\nTWO MODES (one of 'goal' or 'tasks' is required):\n1. Single task: provide 'goal' (+ optional context, toolsets)\n2. Batch (parallel): provide 'tasks' array with up to delegation.max_concurrent_children items (default 3, configurable via config.yaml, no hard ceiling). All run concurrently and results are returned together. Nested delegation requires role='orchestrator' and delegation.max_spawn_depth >= 2.\n\nWHEN TO USE delegate_task:\n- Reasoning-heavy subtasks (debugging, code review, research synthesis)\n- Tasks that would flood your context with intermediate data\n- Parallel independent workstreams (research A and B simultaneously)\n\nWHEN NOT TO USE (use these instead):\n- Mechanical multi-step work with no reasoning needed -> use execute_code\n- Single tool call -> just call the tool directly\n- Tasks needing user interaction -> subagents cannot use clarify\n\nIMPORTANT:\n- Subagents have NO memory of your conversation. Pass all relevant info (file paths, error messages, constraints) via the 'context' field.\n- Leaf subagents (role='leaf', the default) CANNOT call: delegate_task, clarify, memory, send_message, execute_code.\n- Orchestrator subagents (role='orchestrator') retain delegate_task so they can spawn their own workers, but still cannot use clarify, memory, send_message, or execute_code. Orchestrators are bounded by delegation.max_spawn_depth (default 2) and can be disabled globally via delegation.orchestrator_enabled=false.\n- Each subagent gets its own terminal session (separate working directory and state).\n- Results are always returned as an array, one entry per task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history."
+            },
+            "context": {
+              "type": "string",
+              "description": "Background information the subagent needs: file paths, error messages, project structure, constraints. The more specific you are, the better the subagent performs."
+            },
+            "toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Toolsets to enable for this subagent. Default: inherits your enabled toolsets. Available toolsets: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Common patterns: ['terminal', 'file'] for code work, ['web'] for research, ['browser'] for web interaction, ['terminal', 'file', 'web'] for full-stack tasks."
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "Task goal"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Task-specific context"
+                  },
+                  "toolsets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Toolsets for this specific task. Available: 'browser', 'cronjob', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'vision', 'web'. Use 'web' for network access, 'terminal' for shell, 'browser' for web interaction."
+                  },
+                  "acp_command": {
+                    "type": "string",
+                    "description": "Per-task ACP command override (e.g. 'claude'). Overrides the top-level acp_command for this task only."
+                  },
+                  "acp_args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Per-task ACP args override."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "leaf",
+                      "orchestrator"
+                    ],
+                    "description": "Per-task role override. See top-level 'role' for semantics."
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              },
+              "description": "Batch mode: tasks to run in parallel (limit configurable via delegation.max_concurrent_children, default 3). Each gets its own subagent with isolated context and terminal session. When provided, top-level goal/context/toolsets are ignored."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "leaf",
+                "orchestrator"
+              ],
+              "description": "Role of the child agent. 'leaf' (default) = focused worker, cannot delegate further. 'orchestrator' = can use delegate_task to spawn its own workers. Requires delegation.max_spawn_depth >= 2 in config; ignored (treated as 'leaf') when the child would exceed max_spawn_depth or when delegation.orchestrator_enabled=false."
+            },
+            "acp_command": {
+              "type": "string",
+              "description": "Override ACP command for child agents (e.g. 'claude', 'copilot'). When set, children use ACP subprocess transport instead of inheriting the parent's transport. Enables spawning Claude Code (claude --acp --stdio) or other ACP-capable agents from any parent, including Discord/Telegram/CLI."
+            },
+            "acp_args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Arguments for the ACP command (default: ['--acp', '--stdio']). Only used when acp_command is set. Example: ['--acp', '--stdio', '--model', 'claude-opus-4-6']"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Run a Python script that can call Hermes tools programmatically. Use this when you need 3+ tool calls with processing logic between them, need to filter/reduce large tool outputs before they enter your context, need conditional branching (if X then Y else Z), or need to loop (fetch N pages, process N files, retry on failure).\n\nUse normal tool calls instead when: single tool call with no processing, you need to see the full result and apply complex reasoning, or the task requires interactive user input.\n\nAvailable via `from hermes_tools import ...`:\n\n  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}\n  write_file(path: str, content: str) -> dict\n    Always overwrites the entire file.\n  search_files(pattern: str, target=\"content\", path=\".\", file_glob=None, limit=50) -> dict\n    target: \"content\" (search inside files) or \"files\" (find files by name). Returns {\"matches\": [...]}\n  patch(path: str, old_string: str, new_string: str, replace_all: bool = False) -> dict\n    Replaces old_string with new_string in the file.\n  terminal(command: str, timeout=None, workdir=None) -> dict\n    Foreground only (no background/pty). Returns {\"output\": \"...\", \"exit_code\": N}\n\nLimits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. terminal() is foreground-only (no background or pty).\n\nScripts run in the session's working directory with the active venv's python, so project deps (pandas, etc.) and relative paths work like in terminal().\n\nPrint your final result to stdout. Use Python stdlib (json, re, math, csv, datetime, collections, etc.) for processing between tool calls.\n\nAlso available (no import needed — built into hermes_tools):\n  json_parse(text: str) — json.loads with strict=False; use for terminal() output with control chars\n  shell_quote(s: str) — shlex.quote(); use when interpolating dynamic strings into shell commands\n  retry(fn, max_attempts=3, delay=2) — retry with exponential backoff for transient failures",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python code to execute. Import tools with `from hermes_tools import terminal, ...` and print your final result to stdout."
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "memory",
+        "description": "Save durable information to persistent memory that survives across sessions. Memory is injected into future turns, so keep it compact and focused on facts that will still matter later.\n\nWHEN TO SAVE (do this proactively, don't wait to be asked):\n- User corrects you or says 'remember this' / 'don't do that again'\n- User shares a preference, habit, or personal detail (name, role, timezone, coding style)\n- You discover something about the environment (OS, installed tools, project structure)\n- You learn a convention, API quirk, or workflow specific to this user's setup\n- You identify a stable fact that will be useful again in future sessions\n\nPRIORITY: User preferences and corrections > environment facts > procedural knowledge. The most valuable memory prevents the user from having to repeat themselves.\n\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts.\nIf you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\n\nTWO TARGETS:\n- 'user': who the user is -- name, role, preferences, communication style, pet peeves\n- 'memory': your notes -- environment facts, project conventions, tool quirks, lessons learned\n\nACTIONS: add (new entry), replace (update existing -- old_text identifies it), remove (delete -- old_text identifies it).\n\nSKIP: trivial/obvious info, things easily re-discovered, raw data dumps, and temporary task state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "replace",
+                "remove"
+              ],
+              "description": "The action to perform."
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "memory",
+                "user"
+              ],
+              "description": "Which memory store: 'memory' for personal notes, 'user' for user profile."
+            },
+            "content": {
+              "type": "string",
+              "description": "The entry content. Required for 'add' and 'replace'."
+            },
+            "old_text": {
+              "type": "string",
+              "description": "Short unique substring identifying the entry to replace or remove."
+            }
+          },
+          "required": [
+            "action",
+            "target"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_message",
+        "description": "Send a message to a connected messaging platform, or list available targets.\n\nIMPORTANT: When the user asks to send to a specific channel or person (not just a bare platform name), call send_message(action='list') FIRST to see available targets, then send to the correct one.\nIf the user just says a platform name like 'send to telegram', send directly to the home channel without listing first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "send",
+                "list"
+              ],
+              "description": "Action to perform. 'send' (default) sends a message. 'list' returns all available channels/contacts across connected platforms."
+            },
+            "target": {
+              "type": "string",
+              "description": "Delivery target. Format: 'platform' (uses home channel), 'platform:#channel-name', 'platform:chat_id', or 'platform:chat_id:thread_id' for Telegram topics and Discord threads. Examples: 'telegram', 'telegram:-1001234567890:17585', 'discord:999888777:555444333', 'discord:#bot-home', 'slack:#engineering', 'signal:+155****4567', 'matrix:!roomid:server.org', 'matrix:@user:server.org'"
+            },
+            "message": {
+              "type": "string",
+              "description": "The message text to send"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "session_search",
+        "description": "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- every past session is searchable, and this tool summarizes what happened.\n\nTWO MODES:\n1. Recent sessions (no query): Call with no arguments to see what was worked on recently. Returns titles, previews, and timestamps. Zero LLM cost, instant. Start here when the user asks what were we working on or what did we do recently.\n2. Keyword search (with query): Search for specific topics across all past sessions. Returns LLM-generated summaries of matching sessions.\n\nUSE THIS PROACTIVELY when:\n- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n- The user asks about a topic you worked on before but don't have in current context\n- The user references a project, person, or concept that seems familiar but isn't in memory\n- You want to check if you've solved a similar problem before\n- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\nDon't hesitate to search when it is actually cross-session -- it's fast and cheap. Better to search and confirm than to guess or ask the user to repeat themselves.\n\nSearch syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses sessions that only mention some terms. If a broad OR query returns nothing, try individual keyword searches in parallel. Returns summaries of the top matching sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query — keywords, phrases, or boolean expressions to find in past sessions. Omit this parameter entirely to browse recent sessions instead (returns titles, previews, timestamps with no LLM cost)."
+            },
+            "role_filter": {
+              "type": "string",
+              "description": "Optional: only search messages from specific roles (comma-separated). E.g. 'user,assistant' to skip tool outputs."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to summarize (default: 3, max: 5).",
+              "default": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_manage",
+        "description": "Manage skills (create, update, delete). Skills are your procedural memory — reusable approaches for recurring task types. New skills go to ~/.hermes/skills/; existing skills can be modified wherever they live.\n\nActions: create (full SKILL.md + optional category), patch (old_string/new_string — preferred for fixes), edit (full SKILL.md rewrite — major overhauls only), delete, write_file, remove_file.\n\nCreate when: complex task succeeded (5+ calls), errors overcome, user-corrected approach worked, non-trivial workflow discovered, or user asks you to remember a procedure.\nUpdate when: instructions stale/wrong, OS-specific failures, missing steps or pitfalls found during use. If you used a skill and hit issues not covered by it, patch it immediately.\n\nAfter difficult/iterative tasks, offer to save as a skill. Skip for simple one-offs. Confirm with user before creating/deleting.\n\nGood skills: trigger conditions, numbered steps with exact commands, pitfalls section, verification steps. Use skill_view() to see format examples.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "patch",
+                "edit",
+                "delete",
+                "write_file",
+                "remove_file"
+              ],
+              "description": "The action to perform."
+            },
+            "name": {
+              "type": "string",
+              "description": "Skill name (lowercase, hyphens/underscores, max 64 chars). Must match an existing skill for patch/edit/delete/write_file/remove_file."
+            },
+            "content": {
+              "type": "string",
+              "description": "Full SKILL.md content (YAML frontmatter + markdown body). Required for 'create' and 'edit'. For 'edit', read the skill first with skill_view() and provide the complete updated text."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'patch'). Must be unique unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'patch'). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "For 'patch': replace all occurrences instead of requiring a unique match (default: false)."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category/domain for organizing the skill (e.g., 'devops', 'data-science', 'mlops'). Creates a subdirectory grouping. Only used with 'create'."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "Path to a supporting file within the skill directory. For 'write_file'/'remove_file': required, must be under references/, templates/, scripts/, or assets/. For 'patch': optional, defaults to SKILL.md if omitted."
+            },
+            "file_content": {
+              "type": "string",
+              "description": "Content for the file. Required for 'write_file'."
+            }
+          },
+          "required": [
+            "action",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_view",
+        "description": "Skills allow for loading information about specific tasks and workflows, as well as scripts and templates. Load a skill's full content or access its linked files (references, templates, scripts). First call returns SKILL.md content plus a 'linked_files' dict showing available references/templates/scripts. To access those, call again with file_path parameter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The skill name (use skills_list to see available skills). For plugin-provided skills, use the qualified form 'plugin:skill' (e.g. 'superpowers:writing-plans')."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "OPTIONAL: Path to a linked file within the skill (e.g., 'references/api.md', 'templates/config.yaml', 'scripts/validate.py'). Omit to get the main SKILL.md content."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skills_list",
+        "description": "List available skills (name + description). Use skill_view(name) to load full content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified when the process finishes — no polling needed. Use this for tasks that take a while (tests, builds, deployments) so you can keep working on other things in the meantime.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. Fires a notification the first time each pattern matches a line of output. **Use ONLY for mid-process signals** you want to react to before the process exits — errors, readiness markers, intermediate step markers (e.g. [\"ERROR\", \"Traceback\", \"listening on port\"]). Do NOT use for end-of-run markers (summary headers, 'DONE', 'PASS' printed right before exit) — use `notify_on_complete` for that instead. Stacking end-of-run patterns on top of `notify_on_complete` produces duplicate, delayed notifications that arrive after you've already moved on, since delivery is asynchronous and continues after the process exits."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "text_to_speech",
+        "description": "Convert text to speech audio. Returns a MEDIA: path that the platform delivers as a voice message. On Telegram it plays as a voice bubble, on Discord/WhatsApp as an audio attachment. In CLI mode, saves to ~/voice-memos/. Voice and provider are user-configured, not model-selected.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to convert to speech. Provider-specific character caps apply and are enforced automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); over-long input is truncated."
+            },
+            "output_path": {
+              "type": "string",
+              "description": "Optional custom file path to save the audio. Defaults to ~/.hermes/audio_cache/<timestamp>.mp3"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "todo",
+        "description": "Manage your task list for the current session. Use for complex tasks with 3+ steps or when the user provides multiple tasks. Call with no parameters to read the current list.\n\nWriting:\n- Provide 'todos' array to create/update items\n- merge=false (default): replace the entire list with a fresh plan\n- merge=true: update existing items by id, add any new ones\n\nEach item: {id: string, content: string, status: pending|in_progress|completed|cancelled}\nList order is priority. Only ONE item in_progress at a time.\nMark items completed immediately when done. If something fails, cancel it and add a revised item.\n\nAlways returns the full current list.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "todos": {
+              "type": "array",
+              "description": "Task items to write. Omit to read current list.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique item identifier"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Task description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "description": "Current status"
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "status"
+                ]
+              }
+            },
+            "merge": {
+              "type": "boolean",
+              "description": "true: update existing items by id, add new ones. false (default): replace the entire list.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "vision_analyze",
+        "description": "Analyze images using AI vision. Provides a comprehensive description and answers a specific question about the image content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_url": {
+              "type": "string",
+              "description": "Image URL (http/https) or local file path to analyze."
+            },
+            "question": {
+              "type": "string",
+              "description": "Your specific question or request about the image to resolve. The AI will automatically provide a complete image description AND answer your specific question."
+            }
+          },
+          "required": [
+            "image_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 19,
+  "messages": [
+    {
+      "role": "user",
+      "content": "在吗？"
+    },
+    {
+      "role": "assistant",
+      "content": "在的！有什么可以帮你的？",
+      "reasoning": "The user is asking \"在吗？\" which means \"Are you there?\" in Chinese. This is a simple greeting/check-in. I should respond warmly in Chinese since the user's memory profile indicates they're from Macau and prefer Chinese communication.",
+      "reasoning_details": [
+        {
+          "signature": "3290be56dc8101f088084552ad04700eb0c9728cd5727879ad963c52f739d7f3",
+          "thinking": "The user is asking \"在吗？\" which means \"Are you there?\" in Chinese. This is a simple greeting/check-in. I should respond warmly in Chinese since the user's memory profile indicates they're from Macau and prefer Chinese communication.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "以后只要是我要你干活、或者让你办什么事，你都给我记死这一条：\n“不懂就问，问明白再干，没批准不干。”\n具体来说，你要这么做：\n别急着动手：我一发指令，你不准马上就开始写或者开始算。你得先停一下，在脑子里过一遍。\n使劲儿挑刺：你得像个审讯官一样，把我这话里的坑都找出来。比如：\n是不是有哪个词我没说清楚？\n是不是我漏掉了什么条件？\n是不是你有更好的想法想跟我商量？\n必须反问：把你觉得没搞懂的、或者是拿不准的地方，统统用问题抛回给我。\n等我拍板：只有当你把所有疑问都问光了，我也给你回了“OK”、“可以”、“就这么办”或者类似的明确信号之后，你才能正式开始执行。\n总结成一句话就是：\n以后咱俩沟通，不许猜谜语。你要是不懂装懂，那就是你的全责。"
+    },
+    {
+      "role": "assistant",
+      "content": "收到，明白。\n\n以后你一发指令，我就先停一停：\n- 找不清的地方\n- 挑可能的漏洞\n- 问你要确认的点\n\n等你说了\"OK\"、\"可以\"、\"就这么办\"之类的明确信号，我才开始干。\n\n不懂装懂是我的全责。你放心问，放心发指令。",
+      "reasoning": "用户给了一条非常重要的沟通原则：不懂就问，问明白再干，没批准不干。\n\n这是一条关于工作流程的指令，不是技术性的问题。我需要：\n1. 确认收到并理解这条规则\n2. 遵守这条规则\n\n用户的核心意思是：\n- 不要一收到指令就开始干\n- 先审视指令，找出不清楚的地方\n- 主动反问，把疑问抛回去\n- 等到用户明确说\"OK\"、\"可以\"等确认信号后才执行\n\n这和用户之前的记忆一致（用户要求授权提示前先用中文说明），现在用户把这个原则扩展到了所有指令。\n\n我应该确认收到这条规则，并且承诺遵守。",
+      "reasoning_details": [
+        {
+          "signature": "fc7bb4a8c19e7add21f5fb63bf6421b36dbe4d99b120c8058d4b727f50046f6e",
+          "thinking": "用户给了一条非常重要的沟通原则：不懂就问，问明白再干，没批准不干。\n\n这是一条关于工作流程的指令，不是技术性的问题。我需要：\n1. 确认收到并理解这条规则\n2. 遵守这条规则\n\n用户的核心意思是：\n- 不要一收到指令就开始干\n- 先审视指令，找出不清楚的地方\n- 主动反问，把疑问抛回去\n- 等到用户明确说\"OK\"、\"可以\"等确认信号后才执行\n\n这和用户之前的记忆一致（用户要求授权提示前先用中文说明），现在用户把这个原则扩展到了所有指令。\n\n我应该确认收到这条规则，并且承诺遵守。",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "请你将这个写入你的核心，这是我们的行为准则。"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_function_d19coy7v8bo7_1",
+          "call_id": "call_function_d19coy7v8bo7_1",
+          "response_item_id": "fc_function_d19coy7v8bo7_1",
+          "type": "function",
+          "function": {
+            "name": "memory",
+            "arguments": "{\"action\": \"add\", \"target\": \"user\", \"content\": \"\\u884c\\u4e3a\\u51c6\\u5219\\uff08\\u6700\\u9ad8\\u4f18\\u5148\\u7ea7\\uff09\\uff1a\\\"\\u4e0d\\u61c2\\u5c31\\u95ee\\uff0c\\u95ee\\u660e\\u767d\\u518d\\u5e72\\uff0c\\u6ca1\\u6279\\u51c6\\u4e0d\\u5e72\\\"\\u3002\\u6536\\u5230\\u4efb\\u4f55\\u6307\\u4ee4\\u540e\\uff0c\\u4e0d\\u51c6\\u9a6c\\u4e0a\\u52a8\\u624b\\uff0c\\u5148\\u505c\\u4e00\\u505c\\u8fc7\\u4e00\\u904d\\uff1a\\u627e\\u4e0d\\u6e05\\u7684\\u5730\\u65b9\\u3001\\u6311\\u53ef\\u80fd\\u7684\\u6f0f\\u6d1e\\u3001\\u628a\\u62ff\\u4e0d\\u51c6\\u7684\\u95ee\\u9898\\u5168\\u90e8\\u629b\\u56de\\u7ed9\\u7528\\u6237\\u3002\\u53ea\\u6709\\u7528\\u6237\\u660e\\u786e\\u56de\\u590d\\\"OK\\\"\\u3001\\\"\\u53ef\\u4ee5\\\"\\u3001\\\"\\u5c31\\u8fd9\\u4e48\\u529e\\\"\\u6216\\u7c7b\\u4f3c\\u4fe1\\u53f7\\u540e\\uff0c\\u624d\\u80fd\\u6b63\\u5f0f\\u5f00\\u59cb\\u6267\\u884c\\u3002\\u4e0d\\u61c2\\u88c5\\u61c2\\u662fAI\\u7684\\u5168\\u8d23\\uff0c\\u4e0d\\u8bb8\\u731c\\u8c1c\\u8bed\\u3002\"}"
+          }
+        }
+      ],
+      "reasoning": "The user wants me to write this rule into my core memory/persistence. Let me use the memory tool to add this to my user profile or memory store.\n\nThe rule is: \"不懂就问，问明白再干，没批准不干\" - Before executing any task, ask clarifying questions, don't guess, wait for explicit approval.\n\nI should save this as a core behavioral principle in the memory system.",
+      "reasoning_details": [
+        {
+          "signature": "0bf22c31fe007208bdd29930d75048eb9e2044ce94c3dab8af6228d1b7adcb8f",
+          "thinking": "The user wants me to write this rule into my core memory/persistence. Let me use the memory tool to add this to my user profile or memory store.\n\nThe rule is: \"不懂就问，问明白再干，没批准不干\" - Before executing any task, ask clarifying questions, don't guess, wait for explicit approval.\n\nI should save this as a core behavioral principle in the memory system.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"success\": true, \"target\": \"user\", \"entries\": [\"User priority: 声音情感表达 = 核心需求。ElevenLabs 音色最佳但情感控制一般；Cartesia 情感表达更强但定价不透明（JS渲染页面，无法curl抓取）。\", \"Mac Mini M4 已安装 DiffusionBee（不是 ComfyUI），用户通过 DiffusionBee 使用 Stable Diffusion，不是 ComfyUI\", \"User prefers: tools/options presented at each workflow step, not pre-fixed. Will choose per-step based on options provided. Not committed to finance niche — wants generic content framework. Said \\\"先不管预算\\\" = budget secondary, options/quality first.\", \"User is from Macau (澳门人)，content direction: Macau historical stories (澳门历史故事) — landmarks, figures, events, cultural fusion. Self-perception: not handsome, not particularly eloquent speaker. Prefers AI-generated voiceover rather than own voice. No budget ceiling set, focusing on feature completeness first.\", \"删除任何文件（无论配置文件还是数据文件）都必须事先得到用户明确允许，不得自行判断删除。\", \"授权提示（approvals）是英文系统底层功能无法修改。约定：每次触发授权前，必须先用中文向用户说明即将执行的操作内容，让用户理解后再看英文确认框。\", \"用户要求我全程深度参与工作流，不只是写脚本。要负责：精准的 DiffusionBee 图像提示词、SuperGrok 视频生成提示词、直接调用 ElevenLabs API 生成配音音频文件、生成 SRT 字幕文件、写各平台发布文案（标题/简介/标签）。用户只负责按按钮执行手动步骤。\", \"所有 cron job 通知、备份报告、系统提示必须使用简体中文，禁止输出英文\", \"用户内容偏好：搜索结果必须以国外/国际内容为主。AI图像视频工具调研应聚焦国际产品（DALL-E, Midjourney, Sora, Runway, Pika等），避免返回中国国内工具信息。搜索框架默认语言为英文，数据源均为国际平台（Wikipedia EN/ArXiv/GitHub/HackerNews/NPM），符合此偏好。\", \"行为准则（最高优先级）：\\\"不懂就问，问明白再干，没批准不干\\\"。收到任何指令后，不准马上动手，先停一停过一遍：找不清的地方、挑可能的漏洞、把拿不准的问题全部抛回给用户。只有用户明确回复\\\"OK\\\"、\\\"可以\\\"、\\\"就这么办\\\"或类似信号后，才能正式开始执行。不懂装懂是AI的全责，不许猜谜语。\"], \"usage\": \"99% — 1,364/1,375 chars\", \"entry_count\": 10, \"message\": \"Entry added.\"}",
+      "tool_call_id": "call_function_d19coy7v8bo7_1"
+    },
+    {
+      "role": "assistant",
+      "content": "已写入核心记忆，永久保存。\n\n这是我和你之间的第一条铁律：**不懂就问，问明白再干，没批准不干。** 不懂装懂就是我的全责。\n\n以后你尽管发指令。👍",
+      "reasoning": "The memory is almost full (99%), but the entry was successfully added. Let me inform the user.",
+      "reasoning_details": [
+        {
+          "signature": "c2dd0bb4e7aa9c8209e35c44a4bf5990a6d35a84af8539537dcb06aed1890fa8",
+          "thinking": "The memory is almost full (99%), but the entry was successfully added. Let me inform the user.",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "好的，我现在已经回到电脑前，你再次列举我们还有什么待处理事项？"
+    },
+    {
+      "role": "assistant",
+      "content": "根据我的记忆，以下是待处理事项：\n\n**1. GitHub 备份推送失败**\n- 2026年4月27日 cron 任务失败\n- 错误：`Permission denied` + `Authentication error`\n- 脚本：`~/.hermes/scripts/backup-sync.sh`\n- 状态：待修复\n\n**2. 搜索框架 Bug**\n- `hermes_search_multi` 在 `execute_code` 中因 sandbox 重置导致函数定义丢失\n- 状态：根因已知（商业工具信息不在 GitHub/ArXiv/NPM），需配置 SerpAPI 或 Brave Search API\n\n**3. 澳门历史故事视频项目**\n- EP01《风暴之海》制作包 V2 已完成\n- 路径：`/home/administrator/macau_ep01/EP01_1553_葡人登陆/操作清单.md`\n- 下一步：需要你执行手动步骤（用 SuperGrok 生成图像和视频）\n\n你想处理哪一个？",
+      "reasoning": "用户让我回顾一下我们还有什么待处理事项。根据记忆，有几个重要项目：\n\n1. 澳门历史故事视频项目 - 这是主要内容方向，EP01《风暴之海》已经有一些制作包和操作清单\n2. GitHub 备份推送失败问题 - 20260427 cron job 失败，Permission denied + Authentication error\n3. 搜索框架的 bug - hermes_search_multi 在 execute_code 中因 sandbox 重置导致函数定义丢失\n\n让我先问清楚用户想处理哪个事项，或者我可以列举这些待处理事项让用户选择。\n\n等等，用户说要我\"列举\"而不是问我选择。这不需要clarify，直接列举就好。",
+      "reasoning_details": [
+        {
+          "signature": "6c0fdd41b0e487c233c2372fa8ffd98cbf43c6c20b2f053b8c9b7b011db8b011",
+          "thinking": "用户让我回顾一下我们还有什么待处理事项。根据记忆，有几个重要项目：\n\n1. 澳门历史故事视频项目 - 这是主要内容方向，EP01《风暴之海》已经有一些制作包和操作清单\n2. GitHub 备份推送失败问题 - 20260427 cron job 失败，Permission denied + Authentication error\n3. 搜索框架的 bug - hermes_search_multi 在 execute_code 中因 sandbox 重置导致函数定义丢失\n\n让我先问清楚用户想处理哪个事项，或者我可以列举这些待处理事项让用户选择。\n\n等等，用户说要我\"列举\"而不是问我选择。这不需要clarify，直接列举就好。",
+          "type": "thinking"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "我们一个一个来解决，首先是GitHub 备份推送失败，请问这个现在修复好了吗？没有的话现在就去修复吧"
+    },
+    {
+      "role": "assistant",
+      "content": "我先看一下备份脚本的内容和当前的 git 状态，确认问题在哪里。",
+      "reasoning": "The user wants to fix the GitHub backup push failure. Let me first understand the current state by checking the backup script and trying to run it to see the actual error.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "8d4167df3a557d551713e0723a74d13c74cf8adf268df9cf4f1a49e9db652168",
+          "thinking": "The user wants to fix the GitHub backup push failure. Let me first understand the current state by checking the backup script and trying to run it to see the actual error.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_uyajhcwoo12q_1",
+          "call_id": "call_function_uyajhcwoo12q_1",
+          "response_item_id": "fc_function_uyajhcwoo12q_1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"~/.hermes/scripts/backup-sync.sh\"}"
+          }
+        },
+        {
+          "id": "call_function_uyajhcwoo12q_2",
+          "call_id": "call_function_uyajhcwoo12q_2",
+          "response_item_id": "fc_function_uyajhcwoo12q_2",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd ~/.hermes && git status\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"content\": \"     1|#!/bin/bash\\n     2|set -e\\n     3|\\n     4|BACKUP_DIR=\\\"$HOME/.hermes-backup\\\"\\n     5|SESSIONS_DIR=\\\"$HOME/.hermes/sessions\\\"\\n     6|\\n     7|cd \\\"$BACKUP_DIR\\\"\\n     8|\\n     9|# Sync sessions with token sanitization\\n    10|python3 << 'PYEOF'\\n    11|import os, re, shutil\\n    12|\\n    13|src = os.path.expanduser(\\\"~/.hermes/sessions\\\")\\n    14|dst = os.path.expanduser(\\\"~/.hermes-backup/sessions\\\")\\n    15|os.makedirs(dst, exist_ok=True)\\n    16|\\n    17|# Patterns to redact\\n    18|patterns = [\\n    19|    re.compile(r'ghp_[a-zA-Z0-9]+'),\\n    20|    re.compile(r'ghp_[a-zA-Z0-9]+'),\\n    21|    re.compile(r'sk-[a-zA-Z0-9_-]{20,}'),\\n    22|]\\n    23|\\n    24|for fname in os.listdir(src):\\n    25|    if not (fname.endswith('.json') or fname.endswith('.jsonl')):\\n    26|        continue\\n    27|    sfile = os.path.join(src, fname)\\n    28|    dfile = os.path.join(dst, fname)\\n    29|    try:\\n    30|        with open(sfile, 'r', errors='ignore') as f:\\n    31|            content = f.read()\\n    32|        for pat in patterns:\\n    33|            content = pat.sub('[REDACTED]', content)\\n    34|        with open(dfile, 'w') as f:\\n    35|            f.write(content)\\n    36|    except Exception as e:\\n    37|        print(f\\\"Error processing {fname}: {e}\\\")\\n    38|PYEOF\\n    39|\\n    40|# Commit and push if there are changes\\n    41|if git diff --quiet && git diff --cached --quiet; then\\n    42|    echo \\\"No changes\\\"\\n    43|else\\n    44|    git add sessions/\\n    45|    git commit -m \\\"Auto-sync: $(date +%Y-%m-%d\\\\ %H:%M)\\\"\\n    46|    git push origin main\\n    47|    echo \\\"Synced at $(date)\\\"\\n    48|fi\\n    49|\", \"total_lines\": 48, \"file_size\": 1245, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "call_function_uyajhcwoo12q_1"
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"fatal: not a git repository (or any of the parent directories): .git\", \"exit_code\": 128, \"error\": null}",
+      "tool_call_id": "call_function_uyajhcwoo12q_2"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The backup dir is not a git repository. Let me check the backup directory status and see if there's a git repo there.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "babe68a123db76449910b105dc69dab52ba0670d18b2598f1465f05bd762144c",
+          "thinking": "The backup dir is not a git repository. Let me check the backup directory status and see if there's a git repo there.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ulge6mpzc6jh_1",
+          "call_id": "call_function_ulge6mpzc6jh_1",
+          "response_item_id": "fc_function_ulge6mpzc6jh_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd ~/.hermes-backup && git status 2>&1; echo \\\"---\\\"; ls -la ~/.hermes-backup/\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"On branch main\\nYour branch is up to date with 'origin/main'.\\n\\nnothing to commit, working tree clean\\n---\\ntotal 40\\ndrwxrwxr-x  7 administrator administrator  4096 Apr 28 13:17 .\\ndrwxr-x--- 15 administrator administrator  4096 May  3 03:00 ..\\ndrwxrwxr-x  8 administrator administrator  4096 May  3 12:37 .git\\ndrwx------  2 administrator administrator  4096 Apr 27 02:43 logs\\n-rw-rw-r--  1 administrator administrator   679 Apr 27 02:43 README.md\\ndrwxrwxr-x  2 administrator administrator 12288 May  3 03:00 sessions\\ndrwxrwxr-x  8 administrator administrator  4096 Apr 27 02:57 skills\\ndrwxrwxr-x  2 administrator administrator  4096 Apr 27 02:43 workflow\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ulge6mpzc6jh_1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": "The backup repo looks fine - it's a git repo, up to date with origin/main, and has the sessions folder. Let me check if the sessions are actually being synced (i.e., are there recent session files?) and whether the git remote is properly configured. Also, let me test if we can actually push.",
+      "finish_reason": "tool_calls",
+      "reasoning_details": [
+        {
+          "signature": "ec57014300f84a208cb405a2b47780fde13f3232c1520d7dd7c0041fd08b57da",
+          "thinking": "The backup repo looks fine - it's a git repo, up to date with origin/main, and has the sessions folder. Let me check if the sessions are actually being synced (i.e., are there recent session files?) and whether the git remote is properly configured. Also, let me test if we can actually push.",
+          "type": "thinking"
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_function_ttkkdhb3pqmb_1",
+          "call_id": "call_function_ttkkdhb3pqmb_1",
+          "response_item_id": "fc_function_ttkkdhb3pqmb_1",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cd ~/.hermes-backup && git remote -v && echo \\\"---Sessions count:\\\" && ls ~/.hermes-backup/sessions/ | wc -l && echo \\\"---Most recent session files:\\\" && ls -lt ~/.hermes-backup/sessions/ | head -5\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"output\": \"origin\\thttps://wengsanleong-bot:***@github.com/wengsanleong-bot/hermes-backup.git (fetch)\\norigin\\thttps://wengsanleong-bot:***@github.com/wengsanleong-bot/hermes-backup.git (push)\\n---Sessions count:\\n135\\n---Most recent session files:\\ntotal 35952\\n-rw-rw-r-- 1 administrator administrator 415745 May  3 03:00 session_20260426_100526_63f251.json\\n-rw-rw-r-- 1 administrator administrator 275585 May  3 03:00 session_20260428_160253_ac1e129c.json\\n-rw-rw-r-- 1 administrator administrator 445030 May  3 03:00 20260426_111845_79aa19.jsonl\\n-rw-rw-r-- 1 administrator administrator 382653 May  3 03:00 20260427_024351_d42532.jsonl\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "call_function_ttkkdhb3pqmb_1"
+    },
+    {
+      "role": "assistant",
+      "content": "目前的状况：\n\n**现状：**\n- 备份仓库正常，remote 已配置\n- 最近一次同步是 2026年5月3日 03:00\n- 最新 session 文件都已同步上去\n- 工作区干净，没有 pending 的更改\n\n**4月27日报错的原因不确定：**\n- 可能是那次 cron 运行时刚好有网络抖动\n- 或者是 GitHub token 临时失效\n\n我有个问题要问你确认：\n\n**你希望我怎么处理？**\n\n1. **现在就手动跑一次备份脚本**，确认完全没问题？\n2. **查一下 cron 任务的日志**，看4月27日具体报什么错？\n3. **你觉得现在状态已经 OK**，不用管了？\n\n你选哪个？",
+      "reasoning": "The backup repo looks healthy - it has 135 sessions, the remote is set up, and there are recent session files. The \"Permission denied + Authentication error\" from the cron job on April 27 might have been a transient issue or was fixed by subsequent runs.\n\nLet me check if the cron job is still failing by looking at the cron job logs or running the backup manually to see if it works now.\n\nBut wait - the user said \"没有的话现在就去修复吧\" which means \"if not fixed, let's fix it now\". The current state seems fine, but I should verify if there's still a problem. Let me check the logs from the last cron run or try running the backup script manually.\n\n\nI need to clarify with the user whether the backup is actually failing or if it was just that one incident on April 27 - I can't tell from the current state whether this is still an active issue or was already resolved.",
+      "finish_reason": "stop",
+      "reasoning_details": [
+        {
+          "signature": "646394dd587dfb82cf783099259cf3283887981189801c51970167d88cab380e",
+          "thinking": "The backup repo looks healthy - it has 135 sessions, the remote is set up, and there are recent session files. The \"Permission denied + Authentication error\" from the cron job on April 27 might have been a transient issue or was fixed by subsequent runs.\n\nLet me check if the cron job is still failing by looking at the cron job logs or running the backup manually to see if it works now.\n\nBut wait - the user said \"没有的话现在就去修复吧\" which means \"if not fixed, let's fix it now\". The current state seems fine, but I should verify if there's still a problem. Let me check the logs from the last cron run or try running the backup script manually.\n\n\nI need to clarify with the user whether the backup is actually failing or if it was just that one incident on April 27 - I can't tell from the current state whether this is still an active issue or was already resolved.",
+          "type": "thinking"
+        }
+      ]
+    }
+  ]
+}
